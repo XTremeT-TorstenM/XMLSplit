@@ -37,6 +37,22 @@ namespace CSVEntryClass {
             return this.SOURCE.Substring(idx + 1);
         }
 
+        public string getMitSKZ() {
+            return this.mitSKZ;
+        }
+
+        public string getOhneSKZ() {
+            return this.ohneSKZ;
+        }
+
+        public string getTarget() {
+            return this.Target;
+        }
+
+        public string getDatenstrom() {
+            return this.Datenstrom;
+        }
+
         public bool isActive() {
             return this.ACTIVE;
         }

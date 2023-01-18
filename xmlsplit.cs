@@ -37,12 +37,12 @@ internal class XMLSplit {
         CSVData csvData = new CSVData(csvFilename);
         // erzeuge xmlFilelist aus dem uebergebenen Verzeichnis (Standart)
         XMLFilelist xmlFilelist = (arglen == 2) ? new XMLFilelist(args[1]) : new XMLFilelist();
+        // erzeuge Liste mit XML Files und zugehoerigen CSV Daten
         xmlFilelist.getXMLFilelist(csvData);
-        xmlFilelist.showFilelist();
+        // Backup der Originale ins angegebene Verzeichnis
+        var backupOk = (arglen == 3) ? xmlFilelist.backupFiles(args[2]) : xmlFilelist.backupFiles();
+        xmlFilelist.splitFiles();
 
-        // string[] p1 = Directory.GetFiles(@"C:\Temp\Testumgebung\Test_Production\", "P07_RE_2*.xml");
-        // foreach(string file in p1) {
-        //     Console.WriteLine(file);
-        // }
+        xmlFilelist.showFilelist();
     }
 }
