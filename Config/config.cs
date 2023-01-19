@@ -37,5 +37,27 @@ namespace XMLSplit.Configuration {
                 return "error";
             }
         }
+
+        public string getProductionPath() {
+            if (Directory.Exists(this.configs["prodPath"])) {
+                return this.configs["prodPath"];
+            }
+            else {
+                // logging / Ausgabe / exit
+                Console.WriteLine("Error: Wrong path to production files !");
+                Environment.Exit(0);
+                return "error";
+            }
+        }
+
+        public bool isBackup() {
+            return bool.Parse(this.configs["backup"]);
+        }
+        public string getBackupPath() {
+            if (!Directory.Exists(this.configs["backupDir"])) {
+                Directory.CreateDirectory(this.configs["backupDir"]);
+            }
+            return this.configs["backupDir"];
+        }
     }
 }

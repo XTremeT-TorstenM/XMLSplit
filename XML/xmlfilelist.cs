@@ -9,16 +9,41 @@ using System.Xml.Xsl;
 
 using XMLSplit.XML;
 using XMLSplit.CSV;
+using XMLSplit.Configuration;
 
 namespace XMLSplit.XML {
     public class XMLFilelist {
         // private List<Dictionary<string, CSVEntry>> xmlList;
+        // old
         private Dictionary<string, CSVEntry> xmlList;
+        // new
+        private Dictionary<XMLFile, CSVEntry> neuxmlList;
+        private List<XMLFile> fileList;
+        private string xmlFilePath;
+        private Config config;
 
-        public XMLFilelist(string xmlfilePath) {
+        public XMLFilelist(Config config) {
+            this.config = config;
+            this.xmlFilePath = this.config.getProductionPath();
             xmlList = new Dictionary<string, CSVEntry>();
+            neuxmlList = new Dictionary<XMLFile, CSVEntry>();
+            fileList = new List<XMLFile>();
         }
         
+        public void getFileList() {
+            string [] tmpfileList = Directory.GetFiles(this.xmlFilePath, "*", SearchOption.AllDirectories);
+            foreach(string file in tmpfileList) {
+                XMLFile tmpXMLFile = new XMLFile(file, this.config);
+                this.fileList.Add(tmpXMLFile);
+            }
+        }
+
+        public void showFileList() {
+            foreach(XMLFile file in this.fileList) {
+                Console.WriteLine(file);
+            }
+        }
+
         public void getXMLFilelist(CSVData csvData) {
             foreach(CSVEntry entry in csvData.getList()) {
                 if (Directory.Exists(entry.getSOURCEPath())) {

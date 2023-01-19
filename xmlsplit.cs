@@ -32,15 +32,16 @@ internal class XMLSplit
 
             // erzeuge config class fuer laden der Konfiguration
             Config config = new Config(log);
-            config.showConfig("log");
-            config.showConfig("csvFile");
 
             // erzeuge csvData mit CSV File aus Config
             CSVData csvData = new CSVData(config.getCSVFilename());
 
-            foreach(CSVEntry csventry in csvData.getList()) {
-                Console.WriteLine(csventry);
-            }
+            XMLFilelist xmlfilelist = new XMLFilelist(config);
+            xmlfilelist.getFileList();
+            // xmlfilelist.showFileList();
+
+
+
             // // erzeuge xmlFilelist aus dem uebergebenen Verzeichnis (Standart)
             // XMLFilelist xmlFilelist = (arglen == 2) ? new XMLFilelist(args[1]) : new XMLFilelist();
 
