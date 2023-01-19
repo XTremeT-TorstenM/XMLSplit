@@ -1,15 +1,24 @@
 using System;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 
+using System.Xml;
+using System.Xml.Linq;
+
+using XMLSplit.CSV;
 using XMLSplit.Configuration;
 
 namespace XMLSplit.XML {
     public class XMLFile {
         private string xmlFile, xmlFilePath, xmlFileName, xmlBackupFile;
         private Config config;
-        public XMLFile(string xmlFile, Config config) {
+        private CSVEntry csventry;
+        public XMLFile(string xmlFile, CSVEntry csventry, Config config) {
             this.config = config;
+            this.csventry = csventry;
             this.xmlFile = xmlFile;
+            this.xmlBackupFile = "";
             int idx = xmlFile.LastIndexOf('\\');
             this.xmlFilePath = xmlFile.Substring(0, idx);
             this.xmlFileName = xmlFile.Substring(idx + 1);
@@ -33,9 +42,26 @@ namespace XMLSplit.XML {
             }
         }
 
+        public bool isEmpty() {
+            XDocument xmlTree = XDocument.Load(this.xmlFile);
+            // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
+            var i = 0;
+            try {
+                IEnumerable<XElement> testofdatenstrom = xmlTree.Descendants(this.csventry.getDatenstrom());
+                foreach (XElement _ in testofdatenstrom) {
+                    i++;
+                    if (i > 0) { break; }
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+            }
+            return (i > 0) ? false: true;
+        }
+
         public override string ToString()
         {
-            return this.getXMLFilePath() + " --- " + this.getXMLFileName();
+            return "File: " + this.getXMLFileName() + "\t" + "Path: " + this.getXMLFilePath() + "\n" + this.csventry;
         }
 
         ~XMLFile() {

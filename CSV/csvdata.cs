@@ -2,14 +2,16 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
+using XMLSplit.Configuration;
+
 namespace XMLSplit.CSV {
     public class CSVData {
         // Liste mit allen Eintraegen aus der CSV
         private List<CSVEntry> csvList = new List<CSVEntry>();
         // Parameter des Konstruktors ist der Dateiname
-        public CSVData(string csvFileName) {
+        public CSVData(Config config) {
             // Oeffne Datei
-            using (StreamReader reader = new StreamReader(csvFileName)) {
+            using (StreamReader reader = new StreamReader(config.getCSVFilename())) {
                 // Skip erste Zeile = Header
                 var skipline = reader.ReadLine();
                 // Lese bis zum Ende des Files

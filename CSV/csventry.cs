@@ -62,7 +62,7 @@ namespace XMLSplit.CSV {
         // Ueberschriebene ToString fuer Debug
         public override string ToString()
         {
-            return "CSV Entry: " + this.Mandant + " - " + this.ACTIVE;
+            return "CSV Entry: " + this.Mandant + " - " + this.SOURCE;
         }
 
     }

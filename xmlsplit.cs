@@ -1,4 +1,4 @@
-﻿using System;
+﻿// using System;
 using System.IO;
 
 using System.Collections;
@@ -25,8 +25,6 @@ internal class XMLSplit
 
         private static void Main(string[] args)
         {
-            List<Dictionary<string, CSVEntry>> xmlList = new List<Dictionary<string, CSVEntry>>();
-
             // erzeuge log class fuer Logging
             Log log = new Log();
 
@@ -34,11 +32,11 @@ internal class XMLSplit
             Config config = new Config(log);
 
             // erzeuge csvData mit CSV File aus Config
-            CSVData csvData = new CSVData(config.getCSVFilename());
+            CSVData csvData = new CSVData(config);
 
-            XMLFilelist xmlfilelist = new XMLFilelist(config);
+            XMLFilelist xmlfilelist = new XMLFilelist(csvData, config);
             xmlfilelist.getFileList();
-            // xmlfilelist.showFileList();
+            xmlfilelist.showFileList();
 
 
 

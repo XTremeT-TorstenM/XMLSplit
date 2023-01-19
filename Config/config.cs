@@ -18,7 +18,6 @@ namespace XMLSplit.Configuration {
                 string value = val[1].Trim();
                 configs.Add(key, value);
             }
-            Console.WriteLine("Config Cons");
         }
 
         public void showConfig(string key) {
