@@ -1,48 +1,57 @@
 ﻿using System;
 using System.IO;
-using CSVDataClass;
-using CSVEntryClass;
-using XMLFilelistClass;
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 
-internal class XMLSplit {
-    // XML-Split soll mit der CSV als Argument gestartet werden
-    // Diese wird komplett eingelesen
-    // Im naechsten Schritt wird das Production Verzeichniss inkl Unterverzeichnissen
-    // nach XMK durchsucht
-    // Alle gefundenen Dateien werden in einer Liste gespeichert
-    // Zu jeder Datei wird auch ihr CSV Eintrag hinzugefuegt
-    // Zustand: Liste(XML Datei / CSV Eintrag)
-    // Danach erfolgt die Trennung mit den jeweiligen XSLT
-    // Speicherung im Target / Backup des Originals / Weiterleitung Drucker
+using XMLSplit.Logging;
+using XMLSplit.Configuration;
+using XMLSplit.XML;
+using XMLSplit.CSV;
 
-    private static void Main(string[] args) {
+namespace XMLSplit {
+internal class XMLSplit
+    {
+        // XML-Split soll mit der CSV als Argument gestartet werden
+        // Diese wird komplett eingelesen
+        // Im naechsten Schritt wird das Production Verzeichniss inkl Unterverzeichnissen
+        // nach XMK durchsucht
+        // Alle gefundenen Dateien werden in einer Liste gespeichert
+        // Zu jeder Datei wird auch ihr CSV Eintrag hinzugefuegt
+        // Zustand: Liste(XML Datei / CSV Eintrag)
+        // Danach erfolgt die Trennung mit den jeweiligen XSLT
+        // Speicherung im Target / Backup des Originals / Weiterleitung Drucker
 
-        List<Dictionary<string, CSVEntry>> xmlList = new List<Dictionary<string, CSVEntry>>();
-        // check Argument Liste
-        var arglen = args.Length;
-        if (arglen == 0) {
-            Console.WriteLine("Usage: xmlsplit <csvFile> | <pathToXMLFiles>");
-            Environment.Exit(0);
+        private static void Main(string[] args)
+        {
+            List<Dictionary<string, CSVEntry>> xmlList = new List<Dictionary<string, CSVEntry>>();
+
+            // erzeuge log class fuer Logging
+            Log log = new Log();
+
+            // erzeuge config class fuer laden der Konfiguration
+            Config config = new Config(log);
+            config.showConfig("log");
+            config.showConfig("csvFile");
+
+            // erzeuge csvData mit CSV File aus Config
+            CSVData csvData = new CSVData(config.getCSVFilename());
+
+            foreach(CSVEntry csventry in csvData.getList()) {
+                Console.WriteLine(csventry);
+            }
+            // // erzeuge xmlFilelist aus dem uebergebenen Verzeichnis (Standart)
+            // XMLFilelist xmlFilelist = (arglen == 2) ? new XMLFilelist(args[1]) : new XMLFilelist();
+
+            // // erzeuge Liste mit XML Files und zugehoerigen CSV Daten
+            // xmlFilelist.getXMLFilelist(csvData);
+
+            // // Backup der Originale ins angegebene Verzeichnis
+            // var backupOk = (arglen == 3) ? xmlFilelist.backupFiles(args[2]) : xmlFilelist.backupFiles();
+
+            // xmlFilelist.splitFiles();
+            // xmlFilelist.showFilelist();
         }
-        // existiert das CSV File ?
-        if (!File.Exists(args[0])) {
-            Console.WriteLine("CSV file {0} does not exist!", args[0]);
-            Environment.Exit(0);
-        }
-        var csvFilename = args[0];
-        // erzeuge csvData mit dem uebergebenen CSV File
-        CSVData csvData = new CSVData(csvFilename);
-        // erzeuge xmlFilelist aus dem uebergebenen Verzeichnis (Standart)
-        XMLFilelist xmlFilelist = (arglen == 2) ? new XMLFilelist(args[1]) : new XMLFilelist();
-        // erzeuge Liste mit XML Files und zugehoerigen CSV Daten
-        xmlFilelist.getXMLFilelist(csvData);
-        // Backup der Originale ins angegebene Verzeichnis
-        var backupOk = (arglen == 3) ? xmlFilelist.backupFiles(args[2]) : xmlFilelist.backupFiles();
-        xmlFilelist.splitFiles();
-
-        xmlFilelist.showFilelist();
     }
 }

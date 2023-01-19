@@ -1,18 +1,21 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using CSVDataClass;
-using CSVEntryClass;
+// using CSVDataClass;
+// using CSVEntryClass;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Xsl;
 
-namespace XMLFilelistClass {
+using XMLSplit.XML;
+using XMLSplit.CSV;
+
+namespace XMLSplit.XML {
     public class XMLFilelist {
         // private List<Dictionary<string, CSVEntry>> xmlList;
         private Dictionary<string, CSVEntry> xmlList;
 
-        public XMLFilelist(string xmlfilePath = @"C:\Temp\Testumgebung\Test_Production") {
+        public XMLFilelist(string xmlfilePath) {
             xmlList = new Dictionary<string, CSVEntry>();
         }
         
