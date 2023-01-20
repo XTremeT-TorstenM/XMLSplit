@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using XMLSplit.Configuration;
 
 namespace XMLSplit.CSV {
+    // CSVData Class die eine Liste mit allen Eintraegen des CSVFile enthaelt
     public class CSVData {
         // Liste mit allen Eintraegen aus der CSV
         private List<CSVEntry> csvList = new List<CSVEntry>();
-        // Parameter des Konstruktors ist der Dateiname
+        // Parameter des Konstruktors ist das globale Config
         public CSVData(Config config) {
-            // Oeffne Datei
+            // Streamreader mit CSVFile aus config
             using (StreamReader reader = new StreamReader(config.getCSVFilename())) {
                 // Skip erste Zeile = Header
                 var skipline = reader.ReadLine();
@@ -36,6 +37,7 @@ namespace XMLSplit.CSV {
             }
         }
 
+        // gibt die Liste fuer Iterationen zurueck
         public List<CSVEntry> getList() {
             return csvList;
         }

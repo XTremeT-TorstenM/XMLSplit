@@ -34,23 +34,11 @@ internal class XMLSplit
             // erzeuge csvData mit CSV File aus Config
             CSVData csvData = new CSVData(config);
 
+            // erzeuge xmlFileList mit allen XMLFiles die im ProdDir aus der Config zu finden sind
             XMLFilelist xmlfilelist = new XMLFilelist(csvData, config);
             xmlfilelist.getFileList();
-            xmlfilelist.showFileList();
-
-
-
-            // // erzeuge xmlFilelist aus dem uebergebenen Verzeichnis (Standart)
-            // XMLFilelist xmlFilelist = (arglen == 2) ? new XMLFilelist(args[1]) : new XMLFilelist();
-
-            // // erzeuge Liste mit XML Files und zugehoerigen CSV Daten
-            // xmlFilelist.getXMLFilelist(csvData);
-
-            // // Backup der Originale ins angegebene Verzeichnis
-            // var backupOk = (arglen == 3) ? xmlFilelist.backupFiles(args[2]) : xmlFilelist.backupFiles();
-
-            // xmlFilelist.splitFiles();
-            // xmlFilelist.showFilelist();
+            // xmlfilelist.showFileList();
+            xmlfilelist.splitAll();
         }
     }
 }

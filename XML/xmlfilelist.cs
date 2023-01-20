@@ -10,50 +10,17 @@ using XMLSplit.CSV;
 using XMLSplit.Configuration;
 
 namespace XMLSplit.XML {
-    public static class HelperClass {
-        // Hilfsfunktion um WildCard Matching mit Filename zu machen
-        public static bool Glob(this string value, string pattern)
-        {
-            int pos = 0;
-
-            while (pattern.Length != pos)
-            {
-                switch (pattern[pos])
-                {
-                    case '?':
-                        break;
-
-                    case '*':
-                        for (int i = value.Length; i >= pos; i--)
-                        {
-                            if (Glob(value.Substring(i), pattern.Substring(pos + 1)))
-                            {
-                                return true;
-                            }
-                        }
-                        return false;
-
-                    default:
-                        if (value.Length == pos || char.ToUpper(pattern[pos]) != char.ToUpper(value[pos]))
-                        {
-                            return false;
-                        }
-                        break;
-                }
-
-                pos++;
-            }
-
-            return value.Length == pos;
-        }
-    }
-
+    // XMLFileList Class die eine Liste von XML Files enthaelt
     public class XMLFilelist {
         private List<XMLFile> xmlFileList;
+        // Pfad zum zu ueberpruefenden Verzeichniss
         private string xmlProdPath;
+        // globale Config
         private Config config;
+        // CSV Daten fuer Zuweisung zu jedem gefunden XML File
         private CSVData csvData;
 
+        // Konstruktor mit Parametern
         public XMLFilelist(CSVData csvdata, Config config) {
             this.config = config;
             this.csvData = csvdata;
@@ -62,18 +29,28 @@ namespace XMLSplit.XML {
             xmlFileList = new List<XMLFile>();
         }
         
+        // Funktion, die den Produktions Ordner nach allen Dateien (auch Unterverzeichnisse) scant
+        // diese dann mit den CSV Daten abgleicht und ein zugehoeriges XMLFile Objekt erzeugt
+        // und das dann in einer Liste speichert
         public void getFileList() {
+            // scan Dir
             string [] tmpfileList = Directory.GetFiles(this.xmlProdPath, "*", SearchOption.AllDirectories);
+            // fuer jedes File in Liste
             foreach(string file in tmpfileList) {
+                // iteriere ueber jeden CSV Eintrag aus csvData
                 foreach(CSVEntry csventry in this.csvData.getList()) {
+                    // Wenn Pfad vom File mit Pfad vom SOURCE Eintrag uebereinstimmt sowie der Filename mit der Wildcard matched
                     if ((Path.GetDirectoryName(file) == csventry.getSOURCEPath()) && (Path.GetFileName(file).Glob(csventry.getSOURCEFile()))) {
+                        // erzeuge temporaeres XML File
                         XMLFile tmpXMLFile = new XMLFile(file, csventry, this.config);
+                        // fuege temporaeres XML File der Liste hinzu
                         this.xmlFileList.Add(tmpXMLFile);
                     }
                 }
             }
         }
 
+        // Debug Funktion die alle XMLFiles in der Liste ausgibt
         public void showFileList() {
             foreach(XMLFile file in this.xmlFileList) {
                 if (!file.isEmpty()) {
@@ -82,84 +59,40 @@ namespace XMLSplit.XML {
             }
         }
 
-        // public void splitFiles() {
-        //     // xslt directory 
-        //     var cwd = Directory.GetCurrentDirectory();
-        //     cwd = cwd + @"\XSLT";
-        //     // temporaeres xslt dir
-        //     cwd = @"C:\Temp\Testumgebung\Test\XSLT";
-        //     // fuer jedes file mit seinen csv daten ...
-        //     foreach(var kvp in this.xmlList) {
-        //         // check ob zu splittendes file existiert
-        //         if (File.Exists(kvp.Key)) {
-        //             // wenn ziel ordner nicht existiert -> erstellen
-        //             if (!Directory.Exists(kvp.Value.getTarget())) {
-        //                 Directory.CreateDirectory(kvp.Value.getTarget());
-        //             }
-        //             // dateinamen fuer mitSKZ generieren / xslt pfad + datei aus csv data
-        //             string mitfilename = Path.GetFileName(kvp.Key).Replace(".xml", ".MITSKZ.xml");
-        //             string targetfile = Path.Combine(kvp.Value.getTarget(), mitfilename);
-        //             string xsltfile = Path.Combine(cwd, kvp.Value.getMitSKZ());
-        //             // falls file schon vorhanden -> loeschen
-        //             if (File.Exists(targetfile)) {
-        //                 File.Delete(targetfile);
-        //             }
-        //             // wenn die Transformation mit komplett.xslt staffindet -> direkte Kopie
-        //             if (kvp.Value.getMitSKZ().EndsWith("komplett.xslt")) {
-        //                 File.Copy(kvp.Key, targetfile);
-        //             }
-        //             else {
-        //                 split(kvp.Key, xsltfile, targetfile, kvp.Value.getDatenstrom());
-        //             }
-        //             // dateinamen fuer ohneSKZ generieren / xslt pfad + datei aus csv data
-        //             string ohnefilename = Path.GetFileName(kvp.Key).Replace(".xml", ".OHNESKZ.xml");
-        //             targetfile = Path.Combine(kvp.Value.getTarget(), ohnefilename);
-        //             xsltfile = Path.Combine(cwd, kvp.Value.getOhneSKZ());
-        //             // falls file schon vorhanden -> loeschen
-        //             if (File.Exists(targetfile)) {
-        //                 File.Delete(targetfile);
-        //             }
-        //             // wenn die Transformation mit leer.xslt staffindet -> nichts machen
-        //             if (kvp.Value.getOhneSKZ().EndsWith("leer.xslt")) {
-        //             }
-        //             else {
-        //                 split(kvp.Key, xsltfile, targetfile, kvp.Value.getDatenstrom());
-        //             }
-        //         }
-        //     }
-        // }
+        // Funktion, die ueber alle XML Files iteriert und die split Funktion auf Ihnen aufruft
+        public void splitAll() {
+            foreach(XMLFile file in this.xmlFileList) {
+                file.split();
+            }
+        }
+    }
 
-        // public static void split(string xmlfile, string xsltfile, string xmloutfile, string datenstrom) {
-        //     // lade ein XDocument mit dem XML
-        //     XDocument xmlTree = XDocument.Load(xmlfile);
-        //     // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
-        //     var i = 0;
-        //     try {
-        //         IEnumerable<XElement> testofdatenstrom = xmlTree.Descendants(datenstrom);
-        //         foreach (XElement _ in testofdatenstrom) {
-        //             i++;
-        //             if (i > 0) { break; }
-        //         }
-        //     }
-        //     catch (Exception e) {
-        //         Console.WriteLine(e.Message);
-        //     }
-        //     // Wenn Datenstrom existiert fuehre Split durch
-        //     if (i > 0) { 
-        //         // neues XDocument fuer gesplittetes xml
-        //         XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
+    public static class HelperClass {
+        // Hilfsfunktion um WildCard Matching mit Filename zu machen
+        // aehnlich Glob 
+        public static bool Glob(this string value, string pattern) {
+            int pos = 0;
+            while (pattern.Length != pos) {
+                switch (pattern[pos]) {
+                    case '?':
+                        break;
+                    case '*':
+                        for (int i = value.Length; i >= pos; i--) {
+                            if (Glob(value.Substring(i), pattern.Substring(pos + 1))) {
+                                return true;
+                            }
+                        }
+                        return false;
 
-        //         using (XmlWriter writer = newTree.CreateWriter())
-        //         {
-        //             // xslcompiledtransform mit xslt laden
-        //             XslCompiledTransform xslt = new XslCompiledTransform();
-        //             xslt.Load(xsltfile);
-        //             // in newTree transformieren
-        //             xslt.Transform(xmlTree.CreateReader(), writer);
-        //         }
-        //         // als xml speichern
-        //         newTree.Save(xmloutfile);
-        //     }
-        // }
+                    default:
+                        if (value.Length == pos || char.ToUpper(pattern[pos]) != char.ToUpper(value[pos])) {
+                            return false;
+                        }
+                        break;
+                }
+                pos++;
+            }
+            return value.Length == pos;
+        }
     }
 }

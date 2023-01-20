@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Data;
 
 namespace XMLSplit.CSV {
+    // CSVEntry Class die einen CSV Eintrag repraesentiert
     public class CSVEntry {
         // CSV Eintraege
         private bool ACTIVE;
@@ -49,7 +50,7 @@ namespace XMLSplit.CSV {
             return this.Target;
         }
 
-        // Gibt den String zurueck der den Inhalt darstellt nach dem gesucht wird
+        // Gibt den String zurueck, der den Inhalt darstellt, nach dem gesucht wird
         public string getDatenstrom() {
             return this.Datenstrom;
         }
@@ -64,6 +65,5 @@ namespace XMLSplit.CSV {
         {
             return "CSV Entry: " + this.Mandant + " - " + this.SOURCE;
         }
-
     }
 }
