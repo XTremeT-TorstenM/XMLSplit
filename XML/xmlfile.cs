@@ -8,6 +8,7 @@ using System.Xml.Linq;
 
 using XMLSplit.CSV;
 using XMLSplit.Configuration;
+using System.Xml.Xsl;
 
 namespace XMLSplit.XML {
     public class XMLFile {
@@ -69,34 +70,83 @@ namespace XMLSplit.XML {
             return (i > 0) ? false: true;
         }
 
-        // Funktion, die ein XMLFile mit den in CSVEntry enthaltenen xslt Dateien splittet
+        // Funktion, die ein XMLFile mit dem in CSVEntry enthaltenen xslt Dateien splittet
         // Dazu wird der .NET interne XSLT Prozessor verwendet
         public void split() {
-            // check ob File noch vorhanden und nicht leer ist was Datenstrom angeht
+            // check ob File noch vorhanden und Datenstrom beinhaltet
             if ((File.Exists(this.xmlFile) && !this.isEmpty())) {
                 // check ob Target Verzeichnis noch erstellt werden muss
                 if (!Directory.Exists(this.csventry.getTarget())) {
                     Directory.CreateDirectory(this.csventry.getTarget());
                 }
-                string mitfn = this.xmlFileName.Replace(".xml", ".MITSKZ.xml");
-                string mittfn = Path.Combine(this.csventry.getTarget(), mitfn);
-                string mitxslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getMitSKZ());
-                string ohnefn = this.xmlFileName.Replace(".xml", ".OHNESKZ.xml");
-                string ohnetfn = Path.Combine(this.csventry.getTarget(), ohnefn);
-                string ohnexslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getOhneSKZ());
-                // check fuer Output Files
-                if (File.Exists(mittfn) || File.Exists(ohnetfn)) {
-                    // logging / Ausgabe / skip ?
-                    Console.WriteLine("Error: Outputfiles allready exists !");
-                    // check fuer xslt Files
-                    if (!File.Exists(mitxslt) || !File.Exists(ohnexslt)) {
-                        // logging /Ausgabe / skip ?
-                        Console.WriteLine("Error: XSLT file error !");
-                    }
-                }
-                Console.WriteLine("{0} --- {1}", mittfn, mitxslt);
-                Console.WriteLine("{0} --- {1}", ohnetfn, ohnexslt);
+                // einzeln splitten
+                this.splitmitSKZ();
+                this.splitohneSKZ();
             }
+        }
+
+        // split mit SKZ
+        public void splitmitSKZ() {
+            string mitfn = this.xmlFileName.Replace(".xml", ".MITSKZ.xml");
+            string mittargetfn = Path.Combine(this.csventry.getTarget(), mitfn);
+            string mitxslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getMitSKZ());
+            if (checkSplitFiles(mittargetfn, mitxslt)) {
+                // Sonderfall im mitSKZ Split der eine einfache Kopie ist
+                if (!mitxslt.EndsWith("komplett.xslt")) {
+                    // split
+                    Console.WriteLine("Split: {0} mit {1}", this.xmlFile, mitxslt);
+                    Console.WriteLine("Output: {0}", mittargetfn);
+
+                }
+                else {
+                    // Kopie Zweig
+                    Console.WriteLine("Kopie {0} to {1}", this.xmlFile, mittargetfn);
+                }
+            }
+            else {
+                // log / Ausgabe / skip ?
+                Console.WriteLine("Error: Xslt File {0} missing!", mitxslt);
+            }
+        }
+
+        // split ohne SKZ
+        public void splitohneSKZ() {
+            string ohnefn = this.xmlFileName.Replace(".xml", ".OHNESKZ.xml");
+            string ohnetargetfn = Path.Combine(this.csventry.getTarget(), ohnefn);
+            string ohnexslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getOhneSKZ());
+            if (checkSplitFiles(ohnetargetfn, ohnexslt)) {
+                // Sonderfall im ohneSKZ Split der kein Split durchfuehrt und Outputfile ignoriert
+                if (!ohnexslt.EndsWith("leer.xslt")){
+                    // split
+                    Console.WriteLine("Split: {0} mit {1}", this.xmlFile, ohnexslt);
+                    Console.WriteLine("Output: {0}", ohnetargetfn);
+
+                }
+                else {
+                    // Nichts Zweig
+                    // log / Ausgabe / skip ?
+                    Console.WriteLine("Msg: Skip Outputfile {0} because xlst = leer.xslt!", ohnetargetfn);
+                }
+            }
+            else {
+                // log / Ausgabe / skip ?
+                Console.WriteLine("Error: Xslt File {0} missing!", ohnexslt);
+            }
+        }
+
+        public static bool checkSplitFiles(string f, string x) {
+            // check ob Outputfile schon vorhanden ist.
+            if (File.Exists(f)) {
+                // log / Ausgabe / skip ?
+                Console.WriteLine("Error: Outputfile {0} allready exists! Override!", f);
+                // file loeschen
+                File.Delete(f);
+            }
+            // check ob xslt file vorhanden ist
+            if (File.Exists(x)) {
+                return true;
+            }
+            return false;
         }
 
         // Override der ToString fuer Print
@@ -152,40 +202,24 @@ namespace XMLSplit.XML {
         //     }
         // }
 
-        // public static void split(string xmlfile, string xsltfile, string xmloutfile, string datenstrom) {
+        // public static void splitit(string xmlfile, string xsltfile, string xmloutfile, string datenstrom) {
         //     // lade ein XDocument mit dem XML
         //     XDocument xmlTree = XDocument.Load(xmlfile);
-        //     // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
-        //     var i = 0;
-        //     try {
-        //         IEnumerable<XElement> testofdatenstrom = xmlTree.Descendants(datenstrom);
-        //         foreach (XElement _ in testofdatenstrom) {
-        //             i++;
-        //             if (i > 0) { break; }
-        //         }
-        //     }
-        //     catch (Exception e) {
-        //         Console.WriteLine(e.Message);
-        //     }
-        //     // Wenn Datenstrom existiert fuehre Split durch
-        //     if (i > 0) { 
-        //         // neues XDocument fuer gesplittetes xml
-        //         XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
+        //     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
 
-        //         using (XmlWriter writer = newTree.CreateWriter())
-        //         {
-        //             // xslcompiledtransform mit xslt laden
-        //             XslCompiledTransform xslt = new XslCompiledTransform();
-        //             xslt.Load(xsltfile);
-        //             // in newTree transformieren
-        //             xslt.Transform(xmlTree.CreateReader(), writer);
-        //         }
-        //         // als xml speichern
-        //         newTree.Save(xmloutfile);
+        //     using (XmlWriter writer = newTree.CreateWriter())
+        //     {
+        //         // xslcompiledtransform mit xslt laden
+        //         XslCompiledTransform xslt = new XslCompiledTransform();
+        //         xslt.Load(xsltfile);
+        //         // in newTree transformieren
+        //         xslt.Transform(xmlTree.CreateReader(), writer);
         //     }
+        //     // als xml speichern
+        //     newTree.Save(xmloutfile);
         // }
 
-        // Backup jedes XML Files im Destructor + loeschen
+        // Backup + Delete jedes XML Files im Destructor
         ~XMLFile() {
             // wenn XMLFile vorhanden
             if (File.Exists(this.xmlFile)) {
