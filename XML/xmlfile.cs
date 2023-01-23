@@ -79,28 +79,56 @@ namespace XMLSplit.XML {
                 if (!Directory.Exists(this.csventry.getTarget())) {
                     Directory.CreateDirectory(this.csventry.getTarget());
                 }
-                // einzeln splitten
-                this.splitmitSKZ();
-                this.splitohneSKZ();
+                // jeweils mit und ohne SKZ splitten und Fehlerbehandlung
+                string result = "Transformation succsessful !";
+                XDocument xmlTree = XDocument.Load(this.xmlFile);
+                try {
+                    this.splitmitSKZ(xmlTree);
+                    this.splitohneSKZ(xmlTree);
+                }
+                catch (Exception e) {
+                    // result mit Fehler laden
+                    result = "Transformation Error: " + e.ToString() + "\nTransformation canceled!"; 
+                }
+                finally {
+                    // log / Ausgabe
+                    // Console.WriteLine("Error on transformation: {0}", e);
+                    Console.WriteLine("Result: {0}", result);
+                }
+                // log Erfolg ???
             }
         }
 
         // split mit SKZ
-        public void splitmitSKZ() {
+        public void splitmitSKZ(XDocument xmlTree) {
             string mitfn = this.xmlFileName.Replace(".xml", ".MITSKZ.xml");
             string mittargetfn = Path.Combine(this.csventry.getTarget(), mitfn);
             string mitxslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getMitSKZ());
             if (checkSplitFiles(mittargetfn, mitxslt)) {
                 // Sonderfall im mitSKZ Split der eine einfache Kopie ist
                 if (!mitxslt.EndsWith("komplett.xslt")) {
-                    // split
+                    // split / log / Ausgabe
                     Console.WriteLine("Split: {0} mit {1}", this.xmlFile, mitxslt);
                     Console.WriteLine("Output: {0}", mittargetfn);
 
+                    XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
+
+                    using (XmlWriter writer = newTree.CreateWriter())
+                    {
+                        // xslcompiledtransform mit xslt laden
+                        XslCompiledTransform xslt = new XslCompiledTransform();
+                        xslt.Load(mitxslt);
+                        // in newTree transformieren
+                        xslt.Transform(xmlTree.CreateReader(), writer);
+                    }
+                    // als xml speichern
+                    newTree.Save(mittargetfn);
+
                 }
                 else {
-                    // Kopie Zweig
+                    // Kopie Zweig / log / Ausgabe
                     Console.WriteLine("Kopie {0} to {1}", this.xmlFile, mittargetfn);
+                    File.Copy(this.xmlFile, mittargetfn);
                 }
             }
             else {
@@ -110,16 +138,29 @@ namespace XMLSplit.XML {
         }
 
         // split ohne SKZ
-        public void splitohneSKZ() {
+        public void splitohneSKZ(XDocument xmlTree) {
             string ohnefn = this.xmlFileName.Replace(".xml", ".OHNESKZ.xml");
             string ohnetargetfn = Path.Combine(this.csventry.getTarget(), ohnefn);
             string ohnexslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getOhneSKZ());
             if (checkSplitFiles(ohnetargetfn, ohnexslt)) {
                 // Sonderfall im ohneSKZ Split der kein Split durchfuehrt und Outputfile ignoriert
                 if (!ohnexslt.EndsWith("leer.xslt")){
-                    // split
+                    // split / log / Ausgabe
                     Console.WriteLine("Split: {0} mit {1}", this.xmlFile, ohnexslt);
                     Console.WriteLine("Output: {0}", ohnetargetfn);
+
+                    XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
+
+                    using (XmlWriter writer = newTree.CreateWriter())
+                    {
+                        // xslcompiledtransform mit xslt laden
+                        XslCompiledTransform xslt = new XslCompiledTransform();
+                        xslt.Load(ohnexslt);
+                        // in newTree transformieren
+                        xslt.Transform(xmlTree.CreateReader(), writer);
+                    }
+                    // als xml speichern
+                    newTree.Save(ohnetargetfn);
 
                 }
                 else {
@@ -134,6 +175,7 @@ namespace XMLSplit.XML {
             }
         }
 
+        // check output File + xslt File
         public static bool checkSplitFiles(string f, string x) {
             // check ob Outputfile schon vorhanden ist.
             if (File.Exists(f)) {
@@ -150,74 +192,9 @@ namespace XMLSplit.XML {
         }
 
         // Override der ToString fuer Print
-        public override string ToString()
-        {
+        public override string ToString() {
             return "File: " + this.getXMLFileName() + "\t" + "Path: " + this.getXMLFilePath() + "\n" + this.csventry;
         }
-
-        // public void splitFiles() {
-        //     // xslt directory 
-        //     var cwd = Directory.GetCurrentDirectory();
-        //     cwd = cwd + @"\XSLT";
-        //     // temporaeres xslt dir
-        //     cwd = @"C:\Temp\Testumgebung\Test\XSLT";
-        //     // fuer jedes file mit seinen csv daten ...
-        //     foreach(var kvp in this.xmlList) {
-        //         // check ob zu splittendes file existiert
-        //         if (File.Exists(kvp.Key)) {
-        //             // wenn ziel ordner nicht existiert -> erstellen
-        //             if (!Directory.Exists(kvp.Value.getTarget())) {
-        //                 Directory.CreateDirectory(kvp.Value.getTarget());
-        //             }
-        //             // dateinamen fuer mitSKZ generieren / xslt pfad + datei aus csv data
-        //             string mitfilename = Path.GetFileName(kvp.Key).Replace(".xml", ".MITSKZ.xml");
-        //             string targetfile = Path.Combine(kvp.Value.getTarget(), mitfilename);
-        //             string xsltfile = Path.Combine(cwd, kvp.Value.getMitSKZ());
-        //             // falls file schon vorhanden -> loeschen
-        //             if (File.Exists(targetfile)) {
-        //                 File.Delete(targetfile);
-        //             }
-        //             // wenn die Transformation mit komplett.xslt staffindet -> direkte Kopie
-        //             if (kvp.Value.getMitSKZ().EndsWith("komplett.xslt")) {
-        //                 File.Copy(kvp.Key, targetfile);
-        //             }
-        //             else {
-        //                 split(kvp.Key, xsltfile, targetfile, kvp.Value.getDatenstrom());
-        //             }
-        //             // dateinamen fuer ohneSKZ generieren / xslt pfad + datei aus csv data
-        //             string ohnefilename = Path.GetFileName(kvp.Key).Replace(".xml", ".OHNESKZ.xml");
-        //             targetfile = Path.Combine(kvp.Value.getTarget(), ohnefilename);
-        //             xsltfile = Path.Combine(cwd, kvp.Value.getOhneSKZ());
-        //             // falls file schon vorhanden -> loeschen
-        //             if (File.Exists(targetfile)) {
-        //                 File.Delete(targetfile);
-        //             }
-        //             // wenn die Transformation mit leer.xslt staffindet -> nichts machen
-        //             if (kvp.Value.getOhneSKZ().EndsWith("leer.xslt")) {
-        //             }
-        //             else {
-        //                 split(kvp.Key, xsltfile, targetfile, kvp.Value.getDatenstrom());
-        //             }
-        //         }
-        //     }
-        // }
-
-        // public static void splitit(string xmlfile, string xsltfile, string xmloutfile, string datenstrom) {
-        //     // lade ein XDocument mit dem XML
-        //     XDocument xmlTree = XDocument.Load(xmlfile);
-        //     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
-
-        //     using (XmlWriter writer = newTree.CreateWriter())
-        //     {
-        //         // xslcompiledtransform mit xslt laden
-        //         XslCompiledTransform xslt = new XslCompiledTransform();
-        //         xslt.Load(xsltfile);
-        //         // in newTree transformieren
-        //         xslt.Transform(xmlTree.CreateReader(), writer);
-        //     }
-        //     // als xml speichern
-        //     newTree.Save(xmloutfile);
-        // }
 
         // Backup + Delete jedes XML Files im Destructor
         ~XMLFile() {

@@ -68,8 +68,7 @@ namespace XMLSplit.XML {
     }
 
     public static class HelperClass {
-        // Hilfsfunktion um WildCard Matching mit Filename zu machen
-        // aehnlich Glob 
+        // Hilfsfunktion um WildCard Matching mit Filename zu machen (Globbing)
         public static bool Glob(this string value, string pattern) {
             int pos = 0;
             while (pattern.Length != pos) {
