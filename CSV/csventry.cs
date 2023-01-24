@@ -55,6 +55,11 @@ namespace XMLSplit.CSV {
             return this.Datenstrom;
         }
 
+        // Gibt Printer zurueck
+        public string getPrinter() {
+            return this.Printer;
+        }
+
         // Gibt zurueck ob Eintrag aktiv ist 
         public bool isActive() {
             return this.ACTIVE;

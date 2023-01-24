@@ -8,6 +8,7 @@ using System.Xml.Xsl;
 
 using XMLSplit.CSV;
 using XMLSplit.Configuration;
+using XMLSplit.Logging;
 
 namespace XMLSplit.XML {
     // XMLFileList Class die eine Liste von XML Files enthaelt
@@ -19,30 +20,36 @@ namespace XMLSplit.XML {
         private Config config;
         // CSV Daten fuer Zuweisung zu jedem gefunden XML File
         private CSVData csvData;
+        private Log log;
 
         // Konstruktor mit Parametern
-        public XMLFilelist(CSVData csvdata, Config config) {
+        public XMLFilelist(CSVData csvdata, Config config, Log log) {
+            this.log = log;
             this.config = config;
             this.csvData = csvdata;
             this.xmlProdPath = this.config.getProductionPath();
 
             xmlFileList = new List<XMLFile>();
+            this.log.addLog("\n# Create new XML file list!");
         }
         
         // Funktion, die den Produktions Ordner nach allen Dateien (auch Unterverzeichnisse) scant
         // diese dann mit den CSV Daten abgleicht und ein zugehoeriges XMLFile Objekt erzeugt
-        // und das dann in einer Liste speichert
+        // und diese in einer Liste speichert
         public void getFileList() {
             // scan Dir
             string [] tmpfileList = Directory.GetFiles(this.xmlProdPath, "*", SearchOption.AllDirectories);
             // fuer jedes File in Liste
             foreach(string file in tmpfileList) {
                 // iteriere ueber jeden CSV Eintrag aus csvData
+                Console.WriteLine("DEBUG file: {0}", file);
                 foreach(CSVEntry csventry in this.csvData.getList()) {
                     // Wenn Pfad vom File mit Pfad vom SOURCE Eintrag uebereinstimmt sowie der Filename mit der Wildcard matched
                     if ((Path.GetDirectoryName(file) == csventry.getSOURCEPath()) && (Path.GetFileName(file).Glob(csventry.getSOURCEFile()))) {
+                        // log Match
+                        this.log.addLog(string.Format("Found match: {0} with {1}", file, csventry));
                         // erzeuge temporaeres XML File
-                        XMLFile tmpXMLFile = new XMLFile(file, csventry, this.config);
+                        XMLFile tmpXMLFile = new XMLFile(file, csventry, this.config, this.log);
                         // fuege temporaeres XML File der Liste hinzu
                         this.xmlFileList.Add(tmpXMLFile);
                     }
@@ -50,19 +57,14 @@ namespace XMLSplit.XML {
             }
         }
 
-        // Debug Funktion die alle XMLFiles in der Liste ausgibt
-        public void showFileList() {
+        // Funktion, die ueber alle XML Files iteriert und verarbeitet 
+        public void processAll() {
             foreach(XMLFile file in this.xmlFileList) {
-                if (!file.isEmpty()) {
-                    Console.WriteLine(file);
-                }
-            }
-        }
-
-        // Funktion, die ueber alle XML Files iteriert und die split Funktion auf Ihnen aufruft
-        public void splitAll() {
-            foreach(XMLFile file in this.xmlFileList) {
-                file.split();
+                file.logXML();
+                file.transform();
+                file.backup();
+                file.delete();
+                file.copy2Printer();
             }
         }
     }

@@ -13,10 +13,9 @@ using XMLSplit.CSV;
 namespace XMLSplit {
 internal class XMLSplit
     {
-        // XML-Split soll mit der CSV als Argument gestartet werden
-        // Diese wird komplett eingelesen
+        // XML-Split liest CSV beim Start ein 
         // Im naechsten Schritt wird das Production Verzeichniss inkl Unterverzeichnissen
-        // nach XMK durchsucht
+        // nach XML durchsucht
         // Alle gefundenen Dateien werden in einer Liste gespeichert
         // Zu jeder Datei wird auch ihr CSV Eintrag hinzugefuegt
         // Zustand: Liste(XML Datei / CSV Eintrag)
@@ -32,13 +31,15 @@ internal class XMLSplit
             Config config = new Config(log);
 
             // erzeuge csvData mit CSV File aus Config
-            CSVData csvData = new CSVData(config);
+            CSVData csvData = new CSVData(config, log);
 
             // erzeuge xmlFileList mit allen XMLFiles die im ProdDir aus der Config zu finden sind
-            XMLFilelist xmlfilelist = new XMLFilelist(csvData, config);
+            XMLFilelist xmlfilelist = new XMLFilelist(csvData, config, log);
             xmlfilelist.getFileList();
-            // xmlfilelist.showFileList();
-            xmlfilelist.splitAll();
+
+            // Alle XML Dateien in der Liste splitten
+            xmlfilelist.processAll();
+            log.saveLog();
         }
     }
 }
