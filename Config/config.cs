@@ -12,7 +12,7 @@ namespace XMLSplit.Configuration {
         private Log log;
         public Config(Log log) {
             this.log = log;
-            this.log.addLog("\n# read configuration file settings.conf");
+            this.log.addLog("\n# read configuration file \'settings.conf\'", true);
             configs = new Dictionary<string, string>();
             // lese jede Zeile aus Config File (evtl HardCoding noch mit Argument Liste umgehen)
             foreach(string line in File.ReadLines("settings.conf")) {
@@ -29,7 +29,7 @@ namespace XMLSplit.Configuration {
                 // Eintrag hinzufuegen
                 configs.Add(key, value);
             }
-            this.log.addLog("\nConfiguration:");
+            this.log.addLog("Configuration:");
             // fuer jedes Key Value Paar in dem Dictionary erstelle Eintrag im Log
             foreach(var kvp in this.configs) {
                 this.log.addLog(string.Format("{0} = {1}", kvp.Key, kvp.Value));
@@ -47,8 +47,8 @@ namespace XMLSplit.Configuration {
             }
             else {
                 // logging / Ausgabe / exit
-                this.log.addLog("\nError: CSV file doesn`t exists!");
-                Console.WriteLine("Error: CSV file doesn`t exists!");
+                this.log.addLog(string.Format("\nError: CSV file \'{0}\' doesn`t exists!", this.configs["cssvFile"]));
+                Console.WriteLine("\nError: CSV file \'{0}\' doesn`t exists!", this.configs["cssvFile"]);
                 Environment.Exit(0);
                 return "error";
             }
@@ -62,8 +62,8 @@ namespace XMLSplit.Configuration {
             }
             else {
                 // logging / Ausgabe / exit
-                this.log.addLog(string.Format("Error: Production directory {0} doesn't exists!", this.configs["prodPath"]));
-                Console.WriteLine("Error: Production directory {0} doesn't exists!", this.configs["prodPath"]);
+                this.log.addLog(string.Format("Error: Production directory \'{0}\' doesn't exists!", this.configs["prodPath"]));
+                Console.WriteLine("Error: Production directory \'{0}\' doesn't exists!", this.configs["prodPath"]);
                 Environment.Exit(0);
                 return "error";
             }
@@ -77,8 +77,8 @@ namespace XMLSplit.Configuration {
             }
             else {
                 // logging / Ausgabe / exit
-                this.log.addLog(string.Format("Error: XSLT directory {0} doesn't exists!", this.configs["prodPath"]));
-                Console.WriteLine("Error: XSLT directory {0} doesn't exists!", this.configs["prodPath"]);
+                this.log.addLog(string.Format("Error: XSLT directory \'{0}\' doesn't exists!", this.configs["prodPath"]));
+                Console.WriteLine("Error: XSLT directory \'{0}\' doesn't exists!", this.configs["prodPath"]);
                 Environment.Exit(0);
                 return "error";
             }
@@ -89,7 +89,7 @@ namespace XMLSplit.Configuration {
             // ist das Backup Verzeichnis vorhanden 
             if (!Directory.Exists(this.configs["backupDir"])) {
                 // erstelle das Verzeichniss
-                this.log.addLog(string.Format("Create backup directory {0}!", this.configs["backupDir"]));
+                this.log.addLog(string.Format("Create backup directory \'{0}\'!", this.configs["backupDir"]));
                 Directory.CreateDirectory(this.configs["backupDir"]);
             }
             return this.configs["backupDir"];
@@ -110,7 +110,7 @@ namespace XMLSplit.Configuration {
             // ist das Backup Verzeichnis vorhanden 
             if (!Directory.Exists(this.configs["logDir"])) {
                 // erstelle das Verzeichniss
-                this.log.addLog(string.Format("Create log directory {0}!", this.configs["logDir"]));
+                this.log.addLog(string.Format("Create log directory \'{0}\'!", this.configs["logDir"]));
                 Directory.CreateDirectory(this.configs["logDir"]);
             }
             return this.configs["logDir"];

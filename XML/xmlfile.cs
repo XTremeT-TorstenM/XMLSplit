@@ -51,7 +51,7 @@ namespace XMLSplit.XML {
 
         // logt Datei
         public void logXML() {
-            this.log.addLog(string.Format("\n#Process: XML {0}", this.xmlFileName));
+            this.log.addLog(string.Format("# Process: XML {0}", this.xmlFileName), true);
         }
 
         // Macht eine Sicherungskopie des akutellen XML Files
@@ -64,14 +64,14 @@ namespace XMLSplit.XML {
                 if (!File.Exists(this.xmlBackupFile))
                 {
                     // log / file copy dest -> target
-                    this.log.addLog(string.Format("Backup: {0} to {1}", this.xmlFileName, this.xmlBackupFile));
+                    this.log.addLog(string.Format("\nBackup: \'{0}\' to \'{1}\'", this.xmlFileName, this.xmlBackupFile));
                     File.Copy(this.xmlFile, this.config.getBackupPath() + "\\" + this.getXMLFileName().Replace(".xml", ".BACKUP.xml"));
                 }
                 else
                 {
                     // logging / Ausgabe 
-                    this.log.addLog(string.Format("Backup: {0} allready exists!", this.xmlBackupFile));
-                    Console.WriteLine("Error: Backupfile {0} allready exists !", this.xmlBackupFile);
+                    this.log.addLog(string.Format("Backup: \'{0}\' allready exists!", this.xmlBackupFile));
+                    Console.WriteLine("Error: Backupfile \'{0}\' allready exists !", this.xmlBackupFile);
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace XMLSplit.XML {
             if (this.config.isDeleteXMLFile())
             {
                 // XMLFile loeschen
-                this.log.addLog(string.Format("Delete: {0}", this.xmlFileName));
+                this.log.addLog(string.Format("\nDelete: \'{0}\'", this.xmlFileName));
                 File.Delete(this.xmlFile);
             }
         }
@@ -120,8 +120,7 @@ namespace XMLSplit.XML {
                     Directory.CreateDirectory(this.csventry.getTarget());
                 }
                 // Start der Transformation
-                string trtime = DateTime.Now.ToString("HH-mm-ss");
-                this.log.addLog(string.Format("Begin transformation @ {0}", trtime));
+                this.log.addLog("# Begin transformation", true);
 
                 // jeweils mit und ohne SKZ splitten und Fehlerbehandlung
                 string result = "Transformation succsessful !";
@@ -139,13 +138,11 @@ namespace XMLSplit.XML {
                     // Console.WriteLine("Error on transformation: {0}", e);
                     this.log.addLog(result);
                     Console.WriteLine("Result: {0}", result);
-
-                    trtime = DateTime.Now.ToString("HH-mm-ss");
-                    this.log.addLog(string.Format("End transformation @ {0}", trtime));
+                    this.log.addLog("# End transformation", true);
                 }
             }
             else {
-                this.log.addLog(string.Format("XML file {0} does not contain any \"Datenstrom\" {1}", this.xmlFile, this.csventry.getDatenstrom()));
+                this.log.addLog(string.Format("XML file \'{0}\' does not contain any \"Datenstrom\" {1}", this.xmlFile, this.csventry.getDatenstrom()));
             }
         }
 
@@ -155,7 +152,7 @@ namespace XMLSplit.XML {
                 // Sonderfall im mitSKZ Split der eine einfache Kopie ist
                 if (!mitxslt.EndsWith("komplett.xslt")) {
                     // split / log / Ausgabe
-                    this.log.addLog(string.Format("Transform {0} with {1}", this.xmlFile, this.mitxslt));
+                    this.log.addLog(string.Format("Transform \"{0}\" with \"{1}\"", Path.GetFileName(this.xmlFile), Path.GetFileName(this.mitxslt)));
 
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
@@ -174,15 +171,15 @@ namespace XMLSplit.XML {
                 }
                 else {
                     // Kopie Zweig / log / Ausgabe
-                    this.log.addLog(string.Format("Only copy from {0} to {1} needed!", this.xmlFile, this.mitSKZfn));
+                    this.log.addLog(string.Format("Only copy from \'{0}\' to \'{1}\' needed!", Path.GetFileName(this.xmlFile), this.mitSKZfn));
                     // Console.WriteLine("Kopie {0} to {1}", this.xmlFile, mittargetfn);
                     File.Copy(this.xmlFile, this.mitSKZfn);
                 }
             }
             else {
                 // log / Ausgabe / skip ?
-                this.log.addLog(string.Format("Error: XSLT file {0} missing!", this.mitxslt));
-                // Console.WriteLine("Error: Xslt File {0} missing!", mitxslt);
+                this.log.addLog(string.Format("Error: XSLT file \'{0}\' missing!", this.mitxslt));
+                Console.WriteLine("Error: Xslt File \'{0}\' missing!", mitxslt);
             }
         }
 
@@ -192,7 +189,7 @@ namespace XMLSplit.XML {
                 // Sonderfall im ohneSKZ Split der kein Split durchfuehrt und Outputfile ignoriert
                 if (!ohnexslt.EndsWith("leer.xslt")){
                     // split / log / Ausgabe
-                    this.log.addLog(string.Format("Transform {0} with {1}", this.xmlFile, this.ohnexslt));
+                    this.log.addLog(string.Format("Transform \'{0}\' with \'{1}\'", Path.GetFileName(this.xmlFile), Path.GetFileName(this.ohnexslt)));
 
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
@@ -212,13 +209,13 @@ namespace XMLSplit.XML {
                 else {
                     // leer.xslt Zweig
                     // log / Ausgabe / skip ?
-                    this.log.addLog(string.Format("Skip outputfile {0}! (leer.xslt)", this.ohneSKZfn));
+                    this.log.addLog(string.Format("Skip outputfile \'{0}\'! (leer.xslt)", this.ohneSKZfn));
                     // Console.WriteLine("Msg: Skip Outputfile {0} because xlst = leer.xslt!", ohnetargetfn);
                 }
             }
             else {
                 // log / Ausgabe / skip ?
-                this.log.addLog(string.Format("Error: XSLT file {0} missing!", this.ohnexslt));
+                this.log.addLog(string.Format("Error: XSLT file \'{0}\' missing!", this.ohnexslt));
                 // Console.WriteLine("Error: Xslt File {0} missing!", ohnexslt);
             }
         }
@@ -227,16 +224,27 @@ namespace XMLSplit.XML {
         public void copy2Printer() {
             // check Copy2Printer Flag 
             if (this.config.isCopy2Printer()) {
-                string result = "Copy to printer successful!";
+                bool printerror = false;
+                string result = "\n";
                 try {
                     // copy mitSKZ + ohneSKZ zum Drucker
-                    File.Copy(this.mitSKZfn, this.csventry.getPrinter());
-                    File.Copy(this.ohneSKZfn, this.csventry.getPrinter());
+                    if (File.Exists(this.mitSKZfn)) {
+                        File.Copy(this.mitSKZfn, this.csventry.getPrinter());
+                        result = result + string.Format("Copy \'{0}\' to \'{1}\'", Path.GetFileName(this.mitSKZfn), this.csventry.getPrinter()) + "\n";
+                    }
+                    if (File.Exists(this.ohneSKZfn)) {
+                        File.Copy(this.ohneSKZfn, this.csventry.getPrinter());
+                        result = result + string.Format("Copy \'{0}\' to \'{1}\'", Path.GetFileName(this.ohneSKZfn), this.csventry.getPrinter()) + "\n";
+                    }
                 }
                 catch (Exception e) {
-                    result = "Copy to printer error: " + e.ToString();
+                    result = result + "Copy to printer error: " + e.ToString();
+                    printerror = true;
                 }
                 finally {
+                    if (!printerror) {
+                        result = result + "\nCopy to printer with no errors!";
+                    }
                     this.log.addLog(result);
                 }
             }
@@ -247,7 +255,7 @@ namespace XMLSplit.XML {
             // check ob Outputfile schon vorhanden ist.
             if (File.Exists(f)) {
                 // Ausgabe / skip ?
-                Console.WriteLine("Error: Outputfile {0} allready exists! Override!", f);
+                Console.WriteLine("Error: Outputfile \'{0}\' allready exists! Override!", f);
                 // file loeschen
                 File.Delete(f);
             }

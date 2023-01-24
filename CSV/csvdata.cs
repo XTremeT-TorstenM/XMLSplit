@@ -14,7 +14,7 @@ namespace XMLSplit.CSV {
         // Parameter des Konstruktors ist das globale Config
         public CSVData(Config config, Log log) {
             this.log = log;
-            this.log.addLog(string.Format("\n# Load CSV File {0}", config.getCSVFilename()));
+            this.log.addLog(string.Format("# Load CSV File \'{0}\'", config.getCSVFilename()), true);
             var count = 0;
             // Streamreader mit CSVFile aus config
             using (StreamReader reader = new StreamReader(config.getCSVFilename())) {

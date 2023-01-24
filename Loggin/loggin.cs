@@ -12,7 +12,7 @@ namespace XMLSplit.Logging {
         public Log() {
             this.log = new List<string>();
             this.logDir = "";
-            this.logFile = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".log";
+            this.logFile = DateTime.Now.ToString("yyyy-dd-MM--HH-mm-ss") + ".log";
             this.islog = true;
             this.addLog(String.Format("Logfile: {0}", this.logFile));
         }
@@ -20,7 +20,7 @@ namespace XMLSplit.Logging {
         // setzt das aktuelle Log Verzeichnis
         public void setLogDir(string logDir) {
             this.logDir = logDir;
-            this.addLog(string.Format("\nSet logging Directory to: {0}", this.logDir));
+            this.addLog(string.Format("\n# Set log dir: \'{0}\'", this.logDir), true);
         }
 
         // setzt Log Flag
@@ -29,7 +29,11 @@ namespace XMLSplit.Logging {
         }
 
         // fuegt einen Eintrag ins log hinzu
-        public void addLog(string message) {
+        public void addLog(string message, bool logwithtime = false) {
+            string logTime = DateTime.Now.ToString("yyyy-dd-MM--HH-mm-ss");
+            if (logwithtime) {
+                message = "\n# " + logTime.Trim() + "\n" + message.Trim();
+            }
             this.log.Add(message);
         }
 
