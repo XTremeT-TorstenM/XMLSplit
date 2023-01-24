@@ -55,6 +55,9 @@ namespace XMLSplit.XML {
                     }
                 }
             }
+            if (this.xmlFileList.Count == 0) {
+                this.log.addLog("No XML files found!!!");
+            }
         }
 
         // Funktion, die ueber alle XML Files iteriert und verarbeitet 
