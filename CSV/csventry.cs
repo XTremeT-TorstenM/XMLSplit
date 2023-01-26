@@ -23,6 +23,11 @@ namespace XMLSplit.CSV {
             this.Printer = Printer;
         }
 
+        // Gibt Mandant zuruck
+        public string getMandant() {
+            return this.Mandant;
+        }
+
         // Gibt nur den Pfadnamen des SOURCE zurueck
         public string getSOURCEPath() {
             int idx = this.SOURCE.LastIndexOf('\\');

@@ -65,8 +65,8 @@ namespace XMLSplit.XML {
                 file.logXML();
                 file.transform();
                 file.backup();
-                file.delete();
                 file.copy2Printer();
+                file.delete();
             }
         }
     }

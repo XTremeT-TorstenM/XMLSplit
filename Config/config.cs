@@ -85,19 +85,31 @@ namespace XMLSplit.Configuration {
         }
 
         // gibt den Pfad fuer Backups zurueck
-        public string getBackupPath() {
+        public string getBackupPath(string diff, string Mandant) {
             // ist das Backup Verzeichnis vorhanden 
-            if (!Directory.Exists(this.configs["backupDir"])) {
+            string backupDir = this.configs[diff] + "\\" + Mandant;
+            if (!Directory.Exists(backupDir)) {
                 // erstelle das Verzeichniss
-                this.log.addLog(string.Format("Create backup directory \'{0}\'!", this.configs["backupDir"]));
-                Directory.CreateDirectory(this.configs["backupDir"]);
+                this.log.addLog(string.Format("\nCreate backup directory \'{0}\'!", backupDir));
+                Directory.CreateDirectory(backupDir);
             }
-            return this.configs["backupDir"];
+            return backupDir;
         }
 
         // gibt Backup Flag zurueck 
         public bool isBackup() {
             return bool.Parse(this.configs["backup"]);
+        }
+
+        // gibt den Pfad zum Backup Dir fuer gesplittete XML zurueck
+        public string getBackupSplitPath() {
+            // ist das Backup Verzeichnis vorhanden 
+            if (!Directory.Exists(this.configs["backupSplitDir"])) {
+                // erstelle das Verzeichniss
+                this.log.addLog(string.Format("Create backup directory \'{0}\' for split files!", this.configs["backupDir"]));
+                Directory.CreateDirectory(this.configs["backupSplitDir"]);
+            }
+            return this.configs["backupDir"];
         }
 
         // gibt Delete Flag zurueck

@@ -13,7 +13,7 @@ using XMLSplit.Logging;
 
 namespace XMLSplit.XML {
     public class XMLFile {
-        private string xmlFile, xmlFilePath = "", xmlFileName, xmlBackupFile = "";
+        private string xmlFile, xmlFilePath = "", xmlFileName;
         private string mitSKZfn, mitxslt, ohneSKZfn, ohnexslt;
         private Config config;
         private CSVEntry csventry;
@@ -26,11 +26,12 @@ namespace XMLSplit.XML {
             this.config = config;
             this.csventry = csventry;
             this.xmlFile = xmlFile;
+            this.xmlTree = new XDocument();
             this.xmlFileName = Path.GetFileName(xmlFile);
             this.xmlFilePath = Path.GetDirectoryName(xmlFile);
-            this.mitSKZfn = Path.Combine(this.csventry.getTarget(), this.xmlFileName.Replace(".xml", ".MITSKZ.xml"));
+            this.mitSKZfn = Path.Combine(this.csventry.getTarget(), this.getXMLmitSKZFileName());
             this.mitxslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getMitSKZ());
-            this.ohneSKZfn = Path.Combine(this.csventry.getTarget(), this.xmlFileName.Replace(".xml", ".OHNESKZ.xml"));
+            this.ohneSKZfn = Path.Combine(this.csventry.getTarget(), this.getXMLohneSKZFileName());
             this.ohnexslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getOhneSKZ());
 
             // XDocument nur einmal laden (bei einer 700Mb XML belegt dieses Objekt 1700Mb im Speicher)
@@ -49,6 +50,13 @@ namespace XMLSplit.XML {
             return this.xmlFileName;
         }
 
+        public string getXMLmitSKZFileName() {
+            return this.xmlFileName.Replace(".xml", ".MITSKZ.xml");
+        }
+        public string getXMLohneSKZFileName() {
+            return this.xmlFileName.Replace(".xml", ".OHNESKZ.xml");
+        }
+
         // logt Datei
         public void logXML() {
             this.log.addLog(string.Format("# Process: XML {0}", this.xmlFileName), true);
@@ -59,20 +67,26 @@ namespace XMLSplit.XML {
             // Backup Flag true ?
             if (this.config.isBackup()) {
                 // Dateinamen fuer Backupfile aus XML Dateinamen generieren
-                this.xmlBackupFile = Path.Combine(this.config.getBackupPath(), this.getXMLFileName().Replace(".xml", ".BACKUP.xml"));
-                // wenn das Backup noch nicht existiert (sollte bei filename mit Datetime selten passieren)
-                if (!File.Exists(this.xmlBackupFile))
-                {
-                    // log / file copy dest -> target
-                    this.log.addLog(string.Format("\nBackup: \'{0}\' to \'{1}\'", this.xmlFileName, this.xmlBackupFile));
-                    File.Copy(this.xmlFile, this.config.getBackupPath() + "\\" + this.getXMLFileName().Replace(".xml", ".BACKUP.xml"));
-                }
-                else
-                {
-                    // logging / Ausgabe 
-                    this.log.addLog(string.Format("Backup: \'{0}\' allready exists!", this.xmlBackupFile));
-                    Console.WriteLine("Error: Backupfile \'{0}\' allready exists !", this.xmlBackupFile);
-                }
+                string xmlBackupFile = Path.Combine(this.config.getBackupPath("backupDir", this.csventry.getMandant()), this.getXMLFileName().Replace(".xml", ".BACKUP.xml"));
+                this.backupFile(this.xmlFile, xmlBackupFile);
+                string xmlmitSKZBackupFile = Path.Combine(this.config.getBackupPath("backupSplitDir", this.csventry.getMandant()), this.getXMLmitSKZFileName().Replace(".xml", ".BACKUP.xml"));
+                this.backupFile(this.mitSKZfn, xmlmitSKZBackupFile);
+                string xmlohneSKZBackupFile = Path.Combine(this.config.getBackupPath("backupSplitDir", this.csventry.getMandant()), this.getXMLohneSKZFileName().Replace(".xml", ".BACKUP.xml"));
+                this.backupFile(this.ohneSKZfn, xmlohneSKZBackupFile);
+            }
+        }
+
+        public void backupFile(string file, string destfile) {
+            // wenn backup noch nicht existiert
+            if (!File.Exists(destfile)) {
+                // log / file copy dest -> target
+                this.log.addLog(string.Format("Backup: \'{0}\' to \'{1}\'", file, destfile));
+                File.Copy(file, destfile);
+            }
+            else {
+                // logging / Ausgabe 
+                this.log.addLog(string.Format("Backup: \'{0}\' allready exists!", destfile));
+                Console.WriteLine("Error: Backupfile \'{0}\' allready exists !", destfile);
             }
         }
 
@@ -84,6 +98,12 @@ namespace XMLSplit.XML {
                 // XMLFile loeschen
                 this.log.addLog(string.Format("\nDelete: \'{0}\'", this.xmlFileName));
                 File.Delete(this.xmlFile);
+                // XMLFile mit SKZ loeschen
+                this.log.addLog(string.Format("\nDelete: \'{0}\'", this.mitSKZfn));
+                File.Delete(this.mitSKZfn);
+                // XMLFile ohne SKZ loeschen
+                this.log.addLog(string.Format("\nDelete: \'{0}\'", this.ohneSKZfn));
+                File.Delete(this.ohneSKZfn);
             }
         }
 
@@ -152,7 +172,7 @@ namespace XMLSplit.XML {
                 // Sonderfall im mitSKZ Split der eine einfache Kopie ist
                 if (!mitxslt.EndsWith("komplett.xslt")) {
                     // split / log / Ausgabe
-                    this.log.addLog(string.Format("Transform \"{0}\" with \"{1}\"", Path.GetFileName(this.xmlFile), Path.GetFileName(this.mitxslt)));
+                    this.log.addLog(string.Format("Transform \'{0}\' with \'{1}\'", Path.GetFileName(this.xmlFile), Path.GetFileName(this.mitxslt)));
 
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "yes"));
