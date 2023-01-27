@@ -62,11 +62,19 @@ namespace XMLSplit.XML {
         // Funktion, die ueber alle XML Files iteriert und verarbeitet 
         public void processAll() {
             foreach(XMLFile file in this.xmlFileList) {
-                file.logXML();
-                file.transform();
-                file.backup();
-                file.copy2Printer();
-                file.delete();
+                if (!file.isEmpty()) {
+                    file.logXML();
+                    file.transform();
+                    file.backup();
+                    file.copy2Printer();
+                    file.delete();
+                }
+                else {
+                    this.log.addLog(string.Format("XML file \'{0}\' has no Datenstrom \'{1}\'. Skip transformation!", file.getXMLFileName() ,file.getDatenstrom()), true);
+                    Console.WriteLine("No Transformation needed!");
+                    file.backup(false);
+                    file.delete();
+                }
             }
         }
     }
