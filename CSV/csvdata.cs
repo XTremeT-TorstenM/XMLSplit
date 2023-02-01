@@ -16,6 +16,7 @@ namespace XMLSplit.CSV {
             this.log = log;
             this.log.addLog(string.Format("# Load CSV File \'{0}\'", config.getCSVFilename()), true);
             var count = 0;
+            // ToDo! Ueberarbeitung mit CSV Bibliotheken ???
             // Streamreader mit CSVFile aus config
             using (StreamReader reader = new StreamReader(config.getCSVFilename())) {
                 // Skip erste Zeile = Header

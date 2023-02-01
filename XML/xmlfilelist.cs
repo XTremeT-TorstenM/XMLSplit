@@ -33,11 +33,11 @@ namespace XMLSplit.XML {
             this.log.addLog("# Create new XML file list!", true);
         }
         
-        // Funktion, die den Produktions Ordner nach allen Dateien (auch Unterverzeichnisse) scant
+        // Funktion die den Produktions Ordner (inklusive Unterverzeichnisse) nach allen Dateien scant
         // diese dann mit den CSV Daten abgleicht und ein zugehoeriges XMLFile Objekt erzeugt
-        // und diese in einer Liste speichert
+        // und dieses in einer Liste speichert
         public void getFileList() {
-            // scan Dir
+            // scan Dir (SearchOption --> inkl subdir)
             string [] tmpfileList = Directory.GetFiles(this.xmlProdPath, "*", SearchOption.AllDirectories);
             // fuer jedes File in Liste
             foreach(string file in tmpfileList) {
@@ -49,7 +49,7 @@ namespace XMLSplit.XML {
                         this.log.addLog(string.Format("Found match: {0}\n\t{1}", file, csventry));
                         // erzeuge temporaeres XML File
                         XMLFile tmpXMLFile = new XMLFile(file, csventry, this.config, this.log);
-                        // fuege temporaeres XML File der Liste hinzu
+                        // fuege XML File der Liste hinzu
                         this.xmlFileList.Add(tmpXMLFile);
                     }
                 }
@@ -62,6 +62,7 @@ namespace XMLSplit.XML {
         // Funktion, die ueber alle XML Files iteriert und verarbeitet 
         public void processAll() {
             foreach(XMLFile file in this.xmlFileList) {
+                // wenn file datenstrom beinhaltet
                 if (!file.isEmpty()) {
                     file.logXML();
                     file.transform();
@@ -72,6 +73,7 @@ namespace XMLSplit.XML {
                 else {
                     this.log.addLog(string.Format("XML file \'{0}\' has no Datenstrom \'{1}\'. Skip transformation!", file.getXMLFileName() ,file.getDatenstrom()), true);
                     Console.WriteLine("No Transformation needed!");
+                    // false fuer split files nicht backupen
                     file.backup(false);
                     file.delete();
                 }
@@ -80,7 +82,7 @@ namespace XMLSplit.XML {
     }
 
     public static class HelperClass {
-        // Hilfsfunktion um WildCard Matching mit Filename zu machen (Globbing)
+        // Hilfsfunktion fuer WildCard Matching mit Filename
         public static bool Glob(this string value, string pattern) {
             int pos = 0;
             while (pattern.Length != pos) {

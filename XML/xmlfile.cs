@@ -12,7 +12,10 @@ using XMLSplit.Configuration;
 using XMLSplit.Logging;
 
 namespace XMLSplit.XML {
+    // Klasse die ein XML File repraesentiert
+    // Zu diesem gehoert neben dem Dateinamen noch das zugehoerige CSV Entry welches vorher ermittelt wird
     public class XMLFile {
+        // xmlFile = xmlFilePath + xmlFileName
         private string xmlFile, xmlFilePath = "", xmlFileName;
         private string mitSKZfn, mitxslt, ohneSKZfn, ohnexslt;
         private Config config;
@@ -28,7 +31,9 @@ namespace XMLSplit.XML {
             this.xmlFile = xmlFile;
             this.xmlTree = new XDocument();
             this.xmlFileName = Path.GetFileName(xmlFile);
+            // ToDo! Abfangen / Ueberpruefen des Null Verweises
             this.xmlFilePath = Path.GetDirectoryName(xmlFile);
+            // Dateinamen fuer Splitting generieren und XSLT zuweisen
             this.mitSKZfn = Path.Combine(this.csventry.getTarget(), this.getXMLmitSKZFileName());
             this.mitxslt = Path.Combine(this.config.getXSLTPath(), this.csventry.getMitSKZ());
             this.ohneSKZfn = Path.Combine(this.csventry.getTarget(), this.getXMLohneSKZFileName());
@@ -50,31 +55,39 @@ namespace XMLSplit.XML {
             return this.xmlFileName;
         }
 
+        // generiert MITSKZ Dateinamen
         public string getXMLmitSKZFileName() {
             return this.xmlFileName.Replace(".xml", ".MITSKZ.xml");
         }
+
+        // generiert OHNESKZ Dateinamen
         public string getXMLohneSKZFileName() {
             return this.xmlFileName.Replace(".xml", ".OHNESKZ.xml");
         }
 
-        // logt Datei
+        // logt Prozessstart jeder XML Datei
         public void logXML() {
             this.log.addLog(string.Format("# Process: {0}", this.xmlFileName), true);
         }
 
+        // Gibt den String Datenstrom aus der CSV Entry zurueck
         public string getDatenstrom() {
             return this.csventry.getDatenstrom();
         }
+
         // Macht eine Sicherungskopie des akutellen XML Files
+        // Bei backupSplits wird auch eine Sicherung der gesplitteten XML durchgefuehrt
         public void backup(bool backupSplits = true) {
             // Backup Flag true ?
             if (this.config.isBackup()) {
                 // Dateinamen fuer Backupfile aus XML Dateinamen generieren
                 string xmlBackupFile = Path.Combine(this.config.getBackupPath("backupDir", this.csventry.getMandant()), this.getXMLFileName().Replace(".xml", ".BACKUP.xml"));
                 this.backupFile(this.xmlFile, xmlBackupFile);
+                // Backup der Split XMLs
                 if (backupSplits) {
                     string xmlmitSKZBackupFile = Path.Combine(this.config.getBackupPath("backupSplitDir", this.csventry.getMandant()), this.getXMLmitSKZFileName().Replace(".xml", ".BACKUP.xml"));
                     this.backupFile(this.mitSKZfn, xmlmitSKZBackupFile);
+                    // kein Backup bei OHNESKZ = leer.xslt da hier ein Splitting verworfen wird
                     if (!this.ohnexslt.EndsWith("leer.xslt")) {
                         string xmlohneSKZBackupFile = Path.Combine(this.config.getBackupPath("backupSplitDir", this.csventry.getMandant()), this.getXMLohneSKZFileName().Replace(".xml", ".BACKUP.xml"));
                         this.backupFile(this.ohneSKZfn, xmlohneSKZBackupFile);
@@ -83,6 +96,7 @@ namespace XMLSplit.XML {
             }
         }
 
+        // Hilfsfunktion die noch ueberprueft ob Dateien existieren
         public void backupFile(string sourcefile, string destfile) {
             // existiert sourcefile ?
             if (File.Exists(sourcefile)) {
@@ -94,8 +108,8 @@ namespace XMLSplit.XML {
                 }
                 else {
                     // logging / Ausgabe 
-                    this.log.addLog(string.Format("Backup: \'{0}\' allready exists!", destfile));
-                    Console.WriteLine("Error: Backupfile \'{0}\' allready exists!", destfile);
+                    this.log.addLog(string.Format("Error: Backup: \'{0}\' allready exists! Did not backup!", destfile));
+                    Console.WriteLine("Error: Backupfile \'{0}\' allready exists! Did not backup!", destfile);
                 }
             }
             else {
@@ -105,17 +119,18 @@ namespace XMLSplit.XML {
             }
         }
 
-        // Loescht das abgearbeitete XML
+        // Loescht das XMLs je nach Flag
         public void delete() {
-            // Delete flag gesetzt ?
-            if (this.config.isDeleteXMLFile())
-            {
+            // Delete flag fuer Production XML gesetzt ?
+            if (this.config.isDeleteXMLFile()) {
                 // XMLFile loeschen
                 if (File.Exists(this.xmlFile)) {
                     this.log.addLog(string.Format("\nDelete: \'{0}\'", this.xmlFileName));
                     File.Delete(this.xmlFile);
                 }
-
+            }
+            // Delete Flag fuer Split XML gesetzt ?
+            if (this.config.isDeleteSplitXMLFile()) {
                 // XMLFile mit SKZ loeschen
                 if (File.Exists(this.mitSKZfn)) {
                     this.log.addLog(string.Format("\nDelete: \'{0}\'", this.mitSKZfn));
@@ -167,7 +182,6 @@ namespace XMLSplit.XML {
 
                 // jeweils mit und ohne SKZ splitten und Fehlerbehandlung
                 string result = "Transformation succsessful !";
-                // XDocument xmlTree = XDocument.Load(this.xmlFile);
                 try {
                     this.transform_mitSKZ();
                     this.transform_ohneSKZ();
@@ -178,7 +192,6 @@ namespace XMLSplit.XML {
                 }
                 finally {
                     // log / Ausgabe
-                    // Console.WriteLine("Error on transformation: {0}", e);
                     this.log.addLog(result);
                     Console.WriteLine("Result: {0}", result);
                     this.log.addLog("# End transformation", true);
@@ -196,6 +209,7 @@ namespace XMLSplit.XML {
                 if (!this.mitxslt.EndsWith("komplett.xslt")) {
                     // split / log / Ausgabe
                     this.log.addLog(string.Format("Transform \'{0}\' with \'{1}\'", Path.GetFileName(this.xmlFile), Path.GetFileName(this.mitxslt)));
+                    this.log.addLog(string.Format("\t\t--> \'{0}\'", this.getXMLmitSKZFileName()));
 
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "no"));
@@ -214,7 +228,7 @@ namespace XMLSplit.XML {
                 }
                 else {
                     // Kopie Zweig / log / Ausgabe
-                    this.log.addLog(string.Format("Only copy from \'{0}\' to \'{1}\' needed!", Path.GetFileName(this.xmlFile), this.mitSKZfn));
+                    this.log.addLog(string.Format("Only copy from \'{0}\' to \'{1}\' needed! (komplett.xslt)", Path.GetFileName(this.xmlFile), this.mitSKZfn));
                     // Console.WriteLine("Kopie {0} to {1}", this.xmlFile, mittargetfn);
                     File.Copy(this.xmlFile, this.mitSKZfn);
                 }
@@ -233,6 +247,7 @@ namespace XMLSplit.XML {
                 if (!this.ohnexslt.EndsWith("leer.xslt")){
                     // split / log / Ausgabe
                     this.log.addLog(string.Format("Transform \'{0}\' with \'{1}\'", Path.GetFileName(this.xmlFile), Path.GetFileName(this.ohnexslt)));
+                    this.log.addLog(string.Format("\t\t--> \'{0}\'", this.getXMLohneSKZFileName()));
 
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "no"));
@@ -265,8 +280,8 @@ namespace XMLSplit.XML {
 
         // copy zum Printer
         public void copy2Printer() {
-            // check Copy2Printer Flag 
-            if (this.config.isCopy2Printer()) {
+            // check Copy2Printer Flag und ob Transformation wieder in das Production Dir schreibt (SOURCE aus CSV in Target enthalten ist) 
+            if (this.config.isCopy2Printer() && !(this.csventry.getTarget().Contains(this.csventry.getSOURCEPath()))) {
                 bool printerror = false;
                 string result = "\n";
                 try {
@@ -290,6 +305,9 @@ namespace XMLSplit.XML {
                     }
                     this.log.addLog(result);
                 }
+            }
+            else {
+                this.log.addLog("Either Copy2Printer Flag disabled or transformation to production directory !!! -> No copy to printer necessary.", true);
             }
         }
 

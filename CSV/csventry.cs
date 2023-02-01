@@ -35,6 +35,7 @@ namespace XMLSplit.CSV {
         }
 
         // Gibt nur den Dateinamen des SOURCE zurueck
+        // wird fuer file matching benoetigt
         public string getSOURCEFile() {
             int idx = this.SOURCE.LastIndexOf('\\');
             return this.SOURCE.Substring(idx + 1);
@@ -71,8 +72,8 @@ namespace XMLSplit.CSV {
         }
 
         // Ueberschriebene ToString fuer Debug
-        public override string ToString()
-        {
+        public override string ToString() {
+            // ToDo! Ausgabe ueberarbeiten
             return "CSV Entry: " + this.Mandant + " - " + this.SOURCE;
         }
     }

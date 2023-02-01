@@ -12,31 +12,41 @@ namespace XMLSplit.Configuration {
         private Log log;
         public Config(Log log) {
             this.log = log;
+            // ToDo! Aenderung der Angabe der Konfigurationsdatei (Argument etc.)
             this.log.addLog("\n# read configuration file \'settings.conf\'", true);
             configs = new Dictionary<string, string>();
-            // lese jede Zeile aus Config File (evtl HardCoding noch mit Argument Liste umgehen)
-            foreach(string line in File.ReadLines("settings.conf")) {
-                // skip Kommentare
-                if (line.StartsWith("//")) {
-                    continue;
+            // wenn settings.conf existiert
+            if (File.Exists("settings.conf")) {
+                // lese jede Zeile aus Config File 
+                foreach (string line in File.ReadLines("settings.conf")) {
+                    // skip Kommentare
+                    if (line.StartsWith("//")) {
+                        continue;
+                    }
+                    // split am = Zeichen
+                    var val = line.Split('=');
+                    // Key des Dict ist Wert vor dem '='
+                    string key = val[0].Trim();
+                    // Value des Dict ist Wert nach dem '='
+                    string value = val[1].Trim();
+                    // Eintrag zum Dictionary hinzufuegen
+                    configs.Add(key, value);
                 }
-                // split am = Zeichen
-                var val = line.Split('=');
-                // Key des Dict vor dem =
-                string key = val[0].Trim();
-                // Value des Dict nach dem =
-                string value = val[1].Trim();
-                // Eintrag hinzufuegen
-                configs.Add(key, value);
+                this.log.addLog("Configuration:");
+                // fuer jedes Key Value Paar in dem Dictionary erstelle Eintrag im Log
+                foreach (var kvp in this.configs) {
+                    this.log.addLog(string.Format("{0} = {1}", kvp.Key, kvp.Value));
+                }
+                // Log Directory setzen
+                this.log.setLogDir(this.getLogDir());
+                // Log Flag setzen
+                this.log.setLog(this.isLog());
             }
-            this.log.addLog("Configuration:");
-            // fuer jedes Key Value Paar in dem Dictionary erstelle Eintrag im Log
-            foreach(var kvp in this.configs) {
-                this.log.addLog(string.Format("{0} = {1}", kvp.Key, kvp.Value));
+            else {
+                // Fehlerausgabe und Exit
+                Console.WriteLine("ERROR: No 'settings.conf' found! Exit");
+                Environment.Exit(0);
             }
-            // Log Directory setzen
-            this.log.setLogDir(this.getLogDir());
-            this.log.setLog(this.isLog());
         }
 
         // gibt den Dateinamen des CSV Files aus der Config zurueck
@@ -117,6 +127,11 @@ namespace XMLSplit.Configuration {
             return bool.Parse(this.configs["delXMLFile"]);
         }
 
+        // gibt Delete Split XML Flag zurueck
+        public bool isDeleteSplitXMLFile() {
+            return bool.Parse(this.configs["delSplitXMLFile"]);
+        }
+
         // gibt Pfad zum Log Directory zurueck
         public string getLogDir() {
             // ist das Backup Verzeichnis vorhanden 
@@ -133,7 +148,7 @@ namespace XMLSplit.Configuration {
             return bool.Parse(this.configs["log"]);
         }
 
-        // gibt zurueck ob Printer Flag gesetzt ist
+        // gibt Printer Flag zurueck
         public bool isCopy2Printer() {
             return bool.Parse(this.configs["copy2printer"]);
         }

@@ -12,6 +12,7 @@ namespace XMLSplit.Logging {
         public Log() {
             this.log = new List<string>();
             this.logDir = "";
+            // ToDo! Aenderung logfile name
             this.logFile = DateTime.Now.ToString("yyyy-dd-MM--HH-mm-ss") + ".log";
             this.islog = true;
             this.addLog(String.Format("Logfile: {0}", this.logFile));
@@ -37,17 +38,12 @@ namespace XMLSplit.Logging {
             this.log.Add(message);
         }
 
-        // Ausgabe Log in der Konsole
-        public void writeLog() {
-            foreach(var msg in this.log) {
-                Console.WriteLine(msg);
-            }
-        }
-        
         // Ausgabe Log in Logfile
         public void saveLog() {
+            // wenn log flag gesetzt ist
             if (this.islog) {
                 using (StreamWriter logtext = new StreamWriter(Path.Combine(this.logDir, this.logFile))) {
+                    // zeilenweise ausgabe in datei
                     foreach (string msg in this.log) {
                         logtext.WriteLine(msg);
                     }
