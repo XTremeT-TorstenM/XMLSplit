@@ -44,7 +44,7 @@ namespace XMLSplit.XML {
                 // iteriere ueber jeden CSV Eintrag aus csvData
                 foreach(CSVEntry csventry in this.csvData.getList()) {
                     // Wenn Pfad vom File mit Pfad vom SOURCE Eintrag uebereinstimmt sowie der Filename mit der Wildcard matched
-                    if ((Path.GetDirectoryName(file) == csventry.getSOURCEPath()) && (Path.GetFileName(file).Glob(csventry.getSOURCEFile()))) {
+                    if ((Path.GetDirectoryName(file).ToUpper() == csventry.getSOURCEPath().ToUpper()) && (Path.GetFileName(file).Glob(csventry.getSOURCEFile()))) {
                         // log Match
                         this.log.addLog(string.Format("Found match: {0}\n\t{1}", file, csventry));
                         // erzeuge temporaeres XML File
