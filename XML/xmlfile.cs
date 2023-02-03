@@ -22,6 +22,8 @@ namespace XMLSplit.XML {
         private CSVEntry csventry;
         private Log log;
         private XDocument xmlTree;
+        private int elemCount = 0, elementCounter = 0, transeleCount = 0, einProzent = 0, prozent = 0;
+        private string prozentstr = "";
 
         // Konstruktor mit uebergebenen XML File, seinem CSVEntry und der globalen Config 
         public XMLFile(string xmlFile, CSVEntry csventry, Config config, Log log) {
@@ -42,6 +44,11 @@ namespace XMLSplit.XML {
             // XDocument nur einmal laden (bei einer 700Mb XML belegt dieses Objekt 1700Mb im Speicher)
             if (File.Exists(this.xmlFile)) {
                 this.xmlTree = XDocument.Load(this.xmlFile);
+            }
+
+            this.elemCount = this.countElements();
+            if (this.elemCount > 0) {
+                this.einProzent = this.elemCount / 100;
             }
         }
 
@@ -145,26 +152,47 @@ namespace XMLSplit.XML {
             }
         }
 
-        // gibt zurueck ob XML Datenstrom beinhaltet
-        public bool isEmpty() {
-            // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
-            // Helfer Variable 
+        // zaehlt alle Elemente
+        public int countElements() {
             var i = 0;
             try {
                 // erstelle ein IEnumerable auf alle Elemente die Datenstrom enthalten
                 IEnumerable<XElement> testofdatenstrom = this.xmlTree.Descendants(this.csventry.getDatenstrom());
                 // wenn sich das IEnumerable iterieren laesst sind Elemente vorhandan
                 foreach (XElement _ in testofdatenstrom) {
-                    i++;
-                    if (i > 0) { break; }
+                    i += 1;
                 }
             }
             // Exception bei evtl falsch deklariertem Datenstrom
             catch (Exception e) {
                 Console.WriteLine(e.Message);
             }
-            // return ob leer oder nicht
-            return (i > 0) ? false: true;
+            
+            return i;
+        }
+
+        // gibt zurueck ob XML Datenstrom beinhaltet
+        public bool isEmpty() {
+            // // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
+            // // Helfer Variable 
+            // try {
+            //     // erstelle ein IEnumerable auf alle Elemente die Datenstrom enthalten
+            //     IEnumerable<XElement> testofdatenstrom = this.xmlTree.Descendants(this.csventry.getDatenstrom());
+            //     // wenn sich das IEnumerable iterieren laesst sind Elemente vorhandan
+            //     foreach (XElement _ in testofdatenstrom) {
+            //         this.elemCount += 1;
+            //     }
+            // }
+            // // Exception bei evtl falsch deklariertem Datenstrom
+            // catch (Exception e) {
+            //     Console.WriteLine(e.Message);
+            // }
+            // // wenn Elemente zum verarbeiten vorhanden sind den 1 Prozent Anteil berechnen
+            // if (this.elemCount > 0) {
+            //     this.einProzent = this.elemCount / 100;
+            // }
+            // // return ob leer oder nicht
+            return !(this.elemCount > 0);
         }
 
         // Funktion, die ein XMLFile mit dem in CSVEntry enthaltenen xslt Dateien splittet
@@ -214,16 +242,33 @@ namespace XMLSplit.XML {
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "no"));
 
+                    // Console.Clear();
+                    Console.Write("\nProcess: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("\"{0}\"", this.getXMLFileName());
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("Found {0} elements with Datenstrom \"{1}\"", this.elemCount, this.csventry.getDatenstrom());
+                    Console.WriteLine("Transform with \"{0}\"", this.csventry.getMitSKZ());
+
                     using (XmlWriter writer = newTree.CreateWriter())
                     {
                         // xslcompiledtransform mit xslt laden
                         XslCompiledTransform xslt = new XslCompiledTransform();
                         xslt.Load(this.mitxslt);
+                        // Argumentliste zum generieren eines Msg Encounters fuer Progressbar
+                        XsltArgumentList parameters = new XsltArgumentList();
+                        parameters.XsltMessageEncountered += new XsltMessageEncounteredEventHandler(MessageCallBack);
                         // vom alten xmlTree lesen und in neuen transformieren
-                        xslt.Transform(this.xmlTree.CreateReader(), writer);
+                        xslt.Transform(this.xmlTree.CreateReader(), parameters, writer);
                     }
+                    Console.WriteLine("\nFrom {0} elements transformed {1} !", this.elemCount, this.transeleCount);
+                    Console.WriteLine("Save outputfile: \"{0}\"", this.getXMLmitSKZFileName());
                     // als xml speichern
                     newTree.Save(this.mitSKZfn);
+                    this.elementCounter = 0;
+                    this.transeleCount = 0; 
+                    this.prozent = 0;
+                    this.prozentstr = "";
 
                 }
                 else {
@@ -252,17 +297,29 @@ namespace XMLSplit.XML {
                     // neues XDocument fuer Transformation
                     XDocument newTree = new XDocument(new XDeclaration("1.0", "iso-8859-1", "no"));
 
+                    // Console.Clear();
+                    Console.Write("\nProcess: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("\"{0}\"", this.getXMLFileName());
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("Found {0} elements with Datenstrom \"{1}\"", this.elemCount, this.csventry.getDatenstrom());
+                    Console.WriteLine("Transform with \"{0}\"", this.csventry.getOhneSKZ());
+
                     using (XmlWriter writer = newTree.CreateWriter())
                     {
                         // xslcompiledtransform mit xslt laden
                         XslCompiledTransform xslt = new XslCompiledTransform();
                         xslt.Load(this.ohnexslt);
+                        // Argumentliste zum generieren eines Msg Encounters fuer Progressbar
+                        XsltArgumentList parameters = new XsltArgumentList();
+                        parameters.XsltMessageEncountered += new XsltMessageEncounteredEventHandler(MessageCallBack);
                         // vom alten xmlTree lesen und in neuen transformieren
-                        xslt.Transform(this.xmlTree.CreateReader(), writer);
+                        xslt.Transform(this.xmlTree.CreateReader(), parameters, writer);
                     }
+                    Console.WriteLine("\nFrom {0} elements transformed {1} !", this.elemCount, this.transeleCount);
+                    Console.WriteLine("Save outputfile: \"{0}\"", this.getXMLohneSKZFileName());
                     // als xml speichern
                     newTree.Save(this.ohneSKZfn);
-
                 }
                 else {
                     // leer.xslt Zweig
@@ -276,6 +333,33 @@ namespace XMLSplit.XML {
                 this.log.addLog(string.Format("Error: XSLT file \'{0}\' missing!", this.ohnexslt));
                 // Console.WriteLine("Error: Xslt File {0} missing!", ohnexslt);
             }
+        }
+        
+        // Funktion der mit jeder xsl message aufgerufen wird
+        public void MessageCallBack(object sender, XsltMessageEncounteredEventArgs e)
+        {
+            // Console.WriteLine("Message received: {0}", e.Message);
+            if (e.Message.StartsWith("progress")) {
+                this.elementCounter = this.elementCounter + 1;
+                if (this.elementCounter % this.einProzent == 0)
+                {
+                    this.prozent = this.prozent + 1;
+                    if (this.prozent > 100) {
+                        this.prozent = 100;
+                    }
+                    Console.CursorLeft = 1;
+                    // Console.CursorTop = 4;
+                    Console.Write("[{0}] : {1}%", this.prozentstr.PadRight(33, '.'), this.prozent);
+
+                    if (this.prozent % 3 == 0) {
+                       this.prozentstr += "*";
+                    }
+                }
+            }
+            if (e.Message.StartsWith("found")) {
+                this.transeleCount += 1;
+            }
+            
         }
 
         // copy zum Printer

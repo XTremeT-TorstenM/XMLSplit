@@ -11,7 +11,7 @@ using XMLSplit.XML;
 using XMLSplit.CSV;
 
 namespace XMLSplit {
-internal class XMLSplit
+public class XMLSplit
     {
         // XML-Split wird durch WatchDirectory getriggert und liest das CSV beim Start ein 
         // Im naechsten Schritt wird das Production Verzeichniss inkl Unterverzeichnissen
@@ -20,27 +20,33 @@ internal class XMLSplit
         // Zustand: Liste(XML Datei / CSV Eintrag)
         // Danach erfolgt die Trennung mit den jeweiligen XSLT
         // Speicherung im Target / Backup des Originals / Weiterleitung Drucker / Loeschung
+        private Log log;
+        private Config config;
+        private CSVData csvdata;
+        private XMLFilelist xmlfilelist;
 
+        public XMLSplit() {
+            // erzeuge log class fuer Logging
+            this.log = new Log();
+            // erzeuge config class fuer Laden der Konfiguration
+            this.config = new Config(this.log);
+            // erzeuge csvData mit CSV File aus Config
+            this.csvdata = new CSVData(this.config, this.log);
+            // erzeuge xmlFileList mit allen XMLFiles die im ProdDir aus der Config zu finden sind
+            this.xmlfilelist = new XMLFilelist(this.csvdata, this.config, this.log);
+        }
         private static void Main(string[] args)
         {
-            // erzeuge log class fuer Logging
-            Log log = new Log();
+            XMLSplit xmlsplit = new XMLSplit();
 
-            // erzeuge config class fuer Laden der Konfiguration
-            Config config = new Config(log);
-
-            // erzeuge csvData mit CSV File aus Config
-            CSVData csvData = new CSVData(config, log);
-
-            // erzeuge xmlFileList mit allen XMLFiles die im ProdDir aus der Config zu finden sind
-            XMLFilelist xmlfilelist = new XMLFilelist(csvData, config, log);
-            xmlfilelist.getFileList();
+            // generiere FileList aus Inhalten des Produktionsordners und der CSV
+            xmlsplit.xmlfilelist.getFileList();
 
             // Alle XML Dateien in der Liste verarbeiten
-            xmlfilelist.processAll();
+            xmlsplit.xmlfilelist.processAll();
 
             // log Datei speichern
-            log.saveLog();
+            xmlsplit.log.saveLog();
         }
     }
 }

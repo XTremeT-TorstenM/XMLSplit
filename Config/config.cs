@@ -106,20 +106,20 @@ namespace XMLSplit.Configuration {
             return backupDir;
         }
 
+        // gibt Pfad zum Log Directory zurueck
+        public string getLogDir() {
+            // ist das Backup Verzeichnis vorhanden 
+            if (!Directory.Exists(this.configs["logDir"])) {
+                // erstelle das Verzeichniss
+                this.log.addLog(string.Format("Create log directory \'{0}\'!", this.configs["logDir"]));
+                Directory.CreateDirectory(this.configs["logDir"]);
+            }
+            return this.configs["logDir"];
+        }
+
         // gibt Backup Flag zurueck 
         public bool isBackup() {
             return bool.Parse(this.configs["backup"]);
-        }
-
-        // gibt den Pfad zum Backup Dir fuer gesplittete XML zurueck
-        public string getBackupSplitPath() {
-            // ist das Backup Verzeichnis vorhanden 
-            if (!Directory.Exists(this.configs["backupSplitDir"])) {
-                // erstelle das Verzeichniss
-                this.log.addLog(string.Format("Create backup directory \'{0}\' for split files!", this.configs["backupDir"]));
-                Directory.CreateDirectory(this.configs["backupSplitDir"]);
-            }
-            return this.configs["backupDir"];
         }
 
         // gibt Delete Flag zurueck
@@ -132,17 +132,6 @@ namespace XMLSplit.Configuration {
             return bool.Parse(this.configs["delSplitXMLFile"]);
         }
 
-        // gibt Pfad zum Log Directory zurueck
-        public string getLogDir() {
-            // ist das Backup Verzeichnis vorhanden 
-            if (!Directory.Exists(this.configs["logDir"])) {
-                // erstelle das Verzeichniss
-                this.log.addLog(string.Format("Create log directory \'{0}\'!", this.configs["logDir"]));
-                Directory.CreateDirectory(this.configs["logDir"]);
-            }
-            return this.configs["logDir"];
-        }
-        
         // gibt Log Flag zurueck
         public bool isLog() {
             return bool.Parse(this.configs["log"]);
