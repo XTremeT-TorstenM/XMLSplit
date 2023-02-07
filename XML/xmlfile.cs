@@ -22,7 +22,7 @@ namespace XMLSplit.XML {
         private CSVEntry csventry;
         private Log log;
         private XDocument xmlTree;
-        private int elemCount = 0, elementCounter = 0, transeleCount = 0, einProzent = 0, prozent = 0;
+        private int elemCount = 0, elementCounter = 0, transeleCount = 0, oldProzent = 0, prozent = 0;
         private string prozentstr = "";
 
         // Konstruktor mit uebergebenen XML File, seinem CSVEntry und der globalen Config 
@@ -47,9 +47,6 @@ namespace XMLSplit.XML {
             }
 
             this.elemCount = this.countElements();
-            if (this.elemCount > 0) {
-                this.einProzent = this.elemCount / 100;
-            }
         }
 
         // gibt Datei Pfad zurueck
@@ -137,7 +134,7 @@ namespace XMLSplit.XML {
                 }
             }
             // Delete Flag fuer Split XML gesetzt ?
-            if (this.config.isDeleteSplitXMLFile()) {
+            if (this.config.isDeleteSplitXMLFile() && !(this.csventry.getTarget().Contains(this.csventry.getSOURCEPath()))) {
                 // XMLFile mit SKZ loeschen
                 if (File.Exists(this.mitSKZfn)) {
                     this.log.addLog(string.Format("\nDelete: \'{0}\'", this.mitSKZfn));
@@ -173,25 +170,6 @@ namespace XMLSplit.XML {
 
         // gibt zurueck ob XML Datenstrom beinhaltet
         public bool isEmpty() {
-            // // Test ob in Datenstrom angegebenes Element mindestens einmal existiert
-            // // Helfer Variable 
-            // try {
-            //     // erstelle ein IEnumerable auf alle Elemente die Datenstrom enthalten
-            //     IEnumerable<XElement> testofdatenstrom = this.xmlTree.Descendants(this.csventry.getDatenstrom());
-            //     // wenn sich das IEnumerable iterieren laesst sind Elemente vorhandan
-            //     foreach (XElement _ in testofdatenstrom) {
-            //         this.elemCount += 1;
-            //     }
-            // }
-            // // Exception bei evtl falsch deklariertem Datenstrom
-            // catch (Exception e) {
-            //     Console.WriteLine(e.Message);
-            // }
-            // // wenn Elemente zum verarbeiten vorhanden sind den 1 Prozent Anteil berechnen
-            // if (this.elemCount > 0) {
-            //     this.einProzent = this.elemCount / 100;
-            // }
-            // // return ob leer oder nicht
             return !(this.elemCount > 0);
         }
 
@@ -269,6 +247,7 @@ namespace XMLSplit.XML {
                     this.transeleCount = 0; 
                     this.prozent = 0;
                     this.prozentstr = "";
+                    this.oldProzent = 0;
 
                 }
                 else {
@@ -338,28 +317,26 @@ namespace XMLSplit.XML {
         // Funktion der mit jeder xsl message aufgerufen wird
         public void MessageCallBack(object sender, XsltMessageEncounteredEventArgs e)
         {
-            // Console.WriteLine("Message received: {0}", e.Message);
             if (e.Message.StartsWith("progress")) {
                 this.elementCounter = this.elementCounter + 1;
-                if (this.elementCounter % this.einProzent == 0)
-                {
-                    this.prozent = this.prozent + 1;
-                    if (this.prozent > 100) {
-                        this.prozent = 100;
+                // ToDo!!! Div / 0
+                this.prozent = (this.elementCounter * 100) / this.elemCount; 
+                if (this.prozent % 3 == 0 && this.prozent > 0 && this.prozent > this.oldProzent || this.prozent == 100) {
+                    for (int i = this.oldProzent; i < this.prozent; i++) {
+                        if (i % 3 == 0) {
+                            this.prozentstr += "*";
+                        }
                     }
-                    Console.CursorLeft = 1;
-                    // Console.CursorTop = 4;
-                    Console.Write("[{0}] : {1}%", this.prozentstr.PadRight(33, '.'), this.prozent);
-
-                    if (this.prozent % 3 == 0) {
-                       this.prozentstr += "*";
-                    }
+                    // this.prozentstr += "*";
+                    this.oldProzent = this.prozent;
                 }
+                Console.CursorLeft = 10;
+                Console.Write("[{0}] : {1}%", this.prozentstr.PadRight(33, '.'), this.prozent);
             }
+
             if (e.Message.StartsWith("found")) {
                 this.transeleCount += 1;
             }
-            
         }
 
         // copy zum Printer
